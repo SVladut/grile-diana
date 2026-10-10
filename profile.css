@@ -1529,11 +1529,93 @@ select:focus-visible {
   }
 
   .stat-grid {
-    grid-template-columns: 1fr;
+    grid-template-columns: repeat(2, minmax(0, 1fr));
   }
 
   .stat-card {
-    padding: 18px;
+    min-height: 142px;
+    flex-direction: column;
+    gap: 11px;
+    padding: 15px;
+  }
+
+  .stat-icon {
+    width: 35px;
+    height: 35px;
+    border-radius: 11px;
+    font-size: 16px;
+  }
+
+  .stat-card span {
+    font-size: 11px;
+    line-height: 1.35;
+  }
+
+  .stat-card strong {
+    margin-top: 4px;
+    font-size: 27px;
+  }
+
+  .stat-card small {
+    margin-top: 5px;
+    font-size: 10px;
+  }
+
+  .learning-grid {
+    grid-template-columns: minmax(0, 1fr);
+  }
+
+  .learning-card {
+    padding: 19px 16px;
+  }
+
+  .learning-card-header {
+    align-items: flex-start;
+    flex-wrap: wrap;
+    gap: 12px;
+  }
+
+  .learning-link {
+    min-height: 44px;
+    font-size: 11px;
+  }
+
+  .learning-metrics,
+  .notes-metrics {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+    gap: 8px;
+  }
+
+  .learning-metrics > div {
+    padding: 11px;
+  }
+
+  .learning-metrics dt {
+    min-height: 0;
+    font-size: 10px;
+  }
+
+  .learning-metrics dd {
+    font-size: 18px;
+  }
+
+  .learning-progress-copy {
+    align-items: flex-start;
+    flex-wrap: wrap;
+    gap: 7px 12px;
+    margin-top: 18px;
+  }
+
+  .learning-progress-copy strong {
+    font-size: 13px;
+  }
+
+  .learning-progress-copy span {
+    font-size: 11px;
+  }
+
+  .card-last-update {
+    font-size: 10px;
   }
 
   .coverage-main {
@@ -1684,6 +1766,18 @@ select:focus-visible {
   .reset-progress-button {
     width: 100%;
     margin-top: 3px;
+  }
+}
+
+@media (max-width: 360px) {
+  .stat-grid {
+    grid-template-columns: minmax(0, 1fr);
+  }
+
+  .stat-card {
+    min-height: 0;
+    flex-direction: row;
+    align-items: flex-start;
   }
 }
 
