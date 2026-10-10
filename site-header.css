@@ -83,6 +83,16 @@
   }
 }
 
+@media (max-width: 360px) {
+  .header-links {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+
+  .header-links a {
+    font-size: 12px;
+  }
+}
+
 @media (prefers-reduced-motion: reduce) {
   .header-links a {
     transition-duration: 0.01ms;
