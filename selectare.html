@@ -1,0 +1,518 @@
+<!DOCTYPE html>
+<html lang="ro">
+<head>
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <meta charset="UTF-8" />
+  <link rel="icon" type="image/png" href="assets/grile-diana-icon.png" />
+  <title>Selectare Capitole & Simulare</title>
+  <meta name="theme-color" content="#f4f8fb" />
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+  <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@400;500;600;700;800&display=swap" rel="stylesheet" />
+  <link rel="stylesheet" href="selectare.css" />
+</head>
+<body class="selection-page">
+  <div class="page-decoration decoration-one" aria-hidden="true"></div>
+  <div class="page-decoration decoration-two" aria-hidden="true"></div>
+
+  <header class="app-header">
+    <a class="brand" href="index.html" aria-label="Grile Diana - pagina principală">
+      <span class="brand-mark" aria-hidden="true">D</span>
+      <span class="brand-copy">
+        <strong>Grile Diana</strong>
+        <small>Rezidențiat Stomatologie</small>
+      </span>
+    </a>
+    <nav class="header-links" aria-label="Navigare principală">
+      <a class="header-status flashcard-header-link" href="flashcards.html">Flashcarduri</a>
+      <a class="header-status" href="materiale.html">Notițe</a>
+      <a class="header-status" href="profil.html"><i aria-hidden="true"></i> Profilul Dianei</a>
+    </nav>
+  </header>
+
+  <main class="page-shell">
+    <section class="hero-panel" aria-labelledby="page-title">
+      <div class="hero-copy">
+        <span class="eyebrow">Pregătire inteligentă</span>
+        <h1 id="page-title">Planifică. Exersează. Reușește.</h1>
+        <p>Alege exact materia pe care vrei să o consolidezi sau pornește o simulare completă de examen.</p>
+        <div class="hero-stats" aria-label="Conținut disponibil">
+          <span><strong id="bankChapterCount">4</strong> colecții</span>
+          <span><strong id="bankSubchapterCount">160</strong> subcapitole</span>
+          <span><strong id="bankQuestionCount">13.321</strong> grile</span>
+        </div>
+      </div>
+
+      <div class="mode-picker">
+        <span class="mode-picker-title">Alege modul de lucru</span>
+        <div class="switch-container">
+          <span id="selectionModeLabel" class="mode-option active">Test personalizat</span>
+          <label class="toggle-switch">
+            <input type="checkbox" id="viewSwitch" aria-label="Comută între test personalizat și simulare" />
+            <span class="slider"></span>
+          </label>
+          <span id="simulationModeLabel" class="mode-option">Simulare examen</span>
+          <span id="switchLabel" class="sr-only">Selectare Capitole</span>
+        </div>
+      </div>
+    </section>
+
+  <section class="glass-card">
+    <div id="resumeBanner" class="resume-banner" hidden>
+      <div class="resume-icon" aria-hidden="true">↻</div>
+      <div class="resume-copy">
+        <strong>Ai un test în desfășurare</strong>
+        <span id="resumeSummary">Poți continua exact de unde ai rămas.</span>
+      </div>
+      <div class="resume-actions">
+        <button id="discardSessionBtn" type="button" class="text-button">Renunță</button>
+        <button id="resumeSessionBtn" type="button" class="compact-button">Continuă testul</button>
+      </div>
+    </div>
+
+    <section id="mistakesPanel" class="mistakes-panel" aria-labelledby="mistakesTitle">
+      <div class="mistakes-icon" aria-hidden="true">↺</div>
+      <div class="mistakes-copy">
+        <span class="eyebrow">Recapitulare inteligentă</span>
+        <h2 id="mistakesTitle">Grilele mele greșite</h2>
+        <p id="mistakesStatus">Întrebările la care greșești vor apărea automat aici.</p>
+        <a href="profil.html?status=wrong">Vezi lista în profil</a>
+      </div>
+      <form id="mistakesForm" class="mistakes-actions" novalidate>
+        <div class="input-group mistakes-count-field">
+          <input type="number" id="mistakeTestCount" required min="1" max="1" placeholder=" " inputmode="numeric" />
+          <label for="mistakeTestCount">Număr întrebări</label>
+        </div>
+        <button id="startMistakesBtn" type="submit" class="btn mistakes-start-button" disabled>
+          <span>Începe testul din greșeli</span>
+          <span class="button-arrow" aria-hidden="true">→</span>
+        </button>
+        <p id="mistakesMessage" class="form-message" role="alert" hidden></p>
+      </form>
+    </section>
+
+    <!-- Selectare capitole -->
+    <div id="capitole-container" class="active-view">
+      <div class="section-heading">
+        <div>
+          <span class="eyebrow">Selecție personalizată</span>
+          <h2 class="title">Biblioteci, capitole & număr de întrebări</h2>
+          <p>Alege Set 1, Set 2 sau subiectele de examen, apoi deschide capitolele și bifează materia dorită.</p>
+        </div>
+        <div class="selection-status" aria-live="polite">
+          <strong id="selectedCount">0</strong>
+          <span id="selectedSummary">subcapitole selectate</span>
+        </div>
+      </div>
+      <form id="formSelectare" class="form-flex" novalidate>
+
+
+
+
+
+        
+<template id="legacyQuestionCatalog">
+        <!-- Catalog static vechi, păstrat doar ca referință pentru compatibilitate -->
+<div class="capitol-grup">
+  <div class="capitol-header">
+    <label class="capitol-mare">
+      <input type="checkbox" class="master-checkbox" data-target="capitol-1" />
+      <span>Cap. 1. ODONTOTERAPIE</span>
+    </label>
+    <button type="button" class="toggle-subcapitole" data-target="capitol-1">▼</button>
+  </div>
+  <div class="subcapitole hidden" id="capitol-1">
+    <label class="chapter-option">
+      <input type="checkbox" name="capitole" value="Capitol 1" />
+      <span>1.01 Țesuturile dure dentare – structură, implicații clinice</span>
+    </label>
+    <label class="chapter-option">
+      <input type="checkbox" name="capitole" value="Capitol 1" />
+      <span>1.02 Etiologia cariei simple</span>
+    </label>
+    <label class="chapter-option">
+      <input type="checkbox" name="capitole" value="Capitol 1" />
+      <span>1.03 Aspecte histopatologice ale cariei simple</span>
+    </label>
+    <label class="chapter-option">
+      <input type="checkbox" name="capitole" value="Capitol 1" />
+      <span>1.04 Diagnosticul leziunilor carioase</span>
+    </label>
+    <label class="chapter-option">
+      <input type="checkbox" name="capitole" value="Capitol 1" />
+      <span>1.05 Diagnosticul leziunilor necarioase</span>
+    </label>
+    <label class="chapter-option">
+      <input type="checkbox" name="capitole" value="Capitol 1" />
+      <span>1.06 Principii generale de tratament al cariei simple</span>
+    </label>
+    <label class="chapter-option">
+      <input type="checkbox" name="capitole" value="Capitol 1" />
+      <span>1.07 Tratamentul cariei simple cavitare</span>
+    </label>
+    <label class="chapter-option">
+      <input type="checkbox" name="capitole" value="Capitol 1" />
+      <span>1.08 Materiale dentare utilizate modern în tratamentele odontorestauratoare</span>
+    </label>
+  </div>
+</div>
+
+ <div class="capitol-grup">
+  <div class="capitol-header">
+    <label class="capitol-mare">
+      <input type="checkbox" class="master-checkbox" data-target="capitol-2" />
+      <span>Cap. 2. ENDODONȚIE</span>
+    </label>
+    <button type="button" class="toggle-subcapitole" data-target="capitol-2">▼</button>
+  </div>
+  <div class="subcapitole hidden" id="capitol-2">
+    <label class="chapter-option">
+      <input type="checkbox" name="capitole" value="Capitol 2" />
+      <span>2.01 Examinare și diagnostic în endodonție</span>
+    </label>
+    <label class="chapter-option">
+      <input type="checkbox" name="capitole" value="Capitol 2" />
+      <span>2.02 Patologia pulpară și periapicală</span>
+    </label>
+    <label class="chapter-option">
+      <input type="checkbox" name="capitole" value="Capitol 2" />
+      <span>2.03 Tratamentul chemo-mecanic al canalelor radiculare</span>
+    </label>
+    <label class="chapter-option">
+      <input type="checkbox" name="capitole" value="Capitol 2" />
+      <span>2.04 Dezinfecția canalelor radiculare</span>
+    </label>
+    <label class="chapter-option">
+      <input type="checkbox" name="capitole" value="Capitol 2" />
+      <span>2.05 Obturația de canal</span>
+    </label>
+    <label class="chapter-option">
+      <input type="checkbox" name="capitole" value="Capitol 2" />
+      <span>2.06 Incidente și accidente în cursul tratamentului endodontic</span>
+    </label>
+  </div>
+</div>
+
+<div class="capitol-grup">
+  <div class="capitol-header">
+    <label class="capitol-mare">
+      <input type="checkbox" class="master-checkbox" data-target="capitol-3" />
+      <span>Cap. 3. PROTETICĂ DENTARĂ</span>
+    </label>
+    <button type="button" class="toggle-subcapitole" data-target="capitol-3">▼</button>
+  </div>
+  <div class="subcapitole hidden" id="capitol-3">
+    <label class="chapter-option">
+      <input type="checkbox" name="capitole" value="Capitol 3" />
+      <span>3.01 Ocluzologie</span>
+    </label>
+    <label class="chapter-option">
+      <input type="checkbox" name="capitole" value="Capitol 3" />
+      <span>3.02 Edentație parțială redusă</span>
+    </label>
+    <label class="chapter-option">
+      <input type="checkbox" name="capitole" value="Capitol 3" />
+      <span>3.03.1 Etiologia și tabloul clinic a edentației parțial întinse</span>
+    </label>
+    <label class="chapter-option">
+      <input type="checkbox" name="capitole" value="Capitol 3" />
+      <span>3.03.2 Examene clinice și paraclinice în edentația parțială și totală</span>
+    </label>
+    <label class="chapter-option">
+      <input type="checkbox" name="capitole" value="Capitol 3" />
+      <span>3.03.3 Mijloace protetice utilizate în edentația parțială întinsă (EPÎ)</span>
+    </label>
+    <label class="chapter-option">
+      <input type="checkbox" name="capitole" value="Capitol 3" />
+      <span>3.03.4 Algoritm de tratament în EPÎ și soluții terapeutice</span>
+    </label>
+    <label class="chapter-option">
+      <input type="checkbox" name="capitole" value="Capitol 3" />
+      <span>3.03.5 Abordări terapeutice moderne în edentația totală</span>
+    </label>
+  </div>
+</div>
+
+<div class="capitol-grup">
+  <div class="capitol-header">
+    <label class="capitol-mare">
+      <input type="checkbox" class="master-checkbox" data-target="capitol-4" />
+      <span>Cap. 4. PARODONTOLOGIE</span>
+    </label>
+    <button type="button" class="toggle-subcapitole" data-target="capitol-4">▼</button>
+  </div>
+  <div class="subcapitole hidden" id="capitol-4">
+    <label class="chapter-option">
+      <input type="checkbox" name="capitole" value="Capitol 4" />
+      <span>4.01 Anatomia, structura și funcțiile parodonțiului</span>
+    </label>
+    <label class="chapter-option">
+      <input type="checkbox" name="capitole" value="Capitol 4" />
+      <span>4.02 Etiopatogenia bolii parodontale</span>
+    </label>
+    <label class="chapter-option">
+      <input type="checkbox" name="capitole" value="Capitol 4" />
+      <span>4.03 Influența infecției parodontale asupra bolilor sistemice</span>
+    </label>
+    <label class="chapter-option">
+      <input type="checkbox" name="capitole" value="Capitol 4" />
+      <span>4.04 Diagnosticul parodontal</span>
+    </label>
+    <label class="chapter-option">
+      <input type="checkbox" name="capitole" value="Capitol 4" />
+      <span>4.05 Gingivite</span>
+    </label>
+    <label class="chapter-option">
+      <input type="checkbox" name="capitole" value="Capitol 4" />
+      <span>4.06 Parodontite</span>
+    </label>
+    <label class="chapter-option">
+      <input type="checkbox" name="capitole" value="Capitol 4" />
+      <span>4.07 Tratamentul parodontal</span>
+    </label>
+  </div>
+</div>
+
+<div class="capitol-grup">
+  <div class="capitol-header">
+    <label class="capitol-mare">
+      <input type="checkbox" class="master-checkbox" data-target="capitol-5" />
+      <span>Cap. 5. PEDODONȚIE</span>
+    </label>
+    <button type="button" class="toggle-subcapitole" data-target="capitol-5">▼</button>
+  </div>
+  <div class="subcapitole hidden" id="capitol-5">
+    <label class="chapter-option">
+      <input type="checkbox" name="capitole" value="Capitol 5" />
+      <span>5.01 Erupția dentară</span>
+    </label>
+    <label class="chapter-option">
+      <input type="checkbox" name="capitole" value="Capitol 5" />
+      <span>5.02 Profilaxia cariei dentare în perioada de creștere</span>
+    </label>
+    <label class="chapter-option">
+      <input type="checkbox" name="capitole" value="Capitol 5" />
+      <span>5.03 Caria dinților temporari</span>
+    </label>
+    <label class="chapter-option">
+      <input type="checkbox" name="capitole" value="Capitol 5" />
+      <span>5.04 Caria dinților permanenți imaturi</span>
+    </label>
+    <label class="chapter-option">
+      <input type="checkbox" name="capitole" value="Capitol 5" />
+      <span>5.05 Urgențele în practica pedodontică</span>
+    </label>
+    <label class="chapter-option">
+      <input type="checkbox" name="capitole" value="Capitol 5" />
+      <span>5.06 Relația medic-pacient în pedodonție</span>
+    </label>
+  </div>
+</div>
+
+<div class="capitol-grup">
+  <div class="capitol-header">
+    <label class="capitol-mare">
+      <input type="checkbox" class="master-checkbox" data-target="capitol-6" />
+      <span>Cap. 6. ORTODONȚIE ȘI ORTOPEDIE DENTO-FACIALĂ</span>
+    </label>
+    <button type="button" class="toggle-subcapitole" data-target="capitol-6">▼</button>
+  </div>
+  <div class="subcapitole hidden" id="capitol-6">
+    <label class="chapter-option">
+      <input type="checkbox" name="capitole" value="Capitol 6" />
+      <span>6.1.1 Dinții supranumerari</span>
+    </label>
+    <label class="chapter-option">
+      <input type="checkbox" name="capitole" value="Capitol 6" />
+      <span>6.1.2 Anodonția</span>
+    </label>
+    <label class="chapter-option">
+      <input type="checkbox" name="capitole" value="Capitol 6" />
+      <span>6.1.3 Incluzia dentară</span>
+    </label>
+    <label class="chapter-option">
+      <input type="checkbox" name="capitole" value="Capitol 6" />
+      <span>6.1.4 Reincluzia dentară</span>
+    </label>
+    <label class="chapter-option">
+      <input type="checkbox" name="capitole" value="Capitol 6" />
+      <span>6.1.5 Ectopia dentară</span>
+    </label>
+    <label class="chapter-option">
+      <input type="checkbox" name="capitole" value="Capitol 6" />
+      <span>6.1.6 Transpoziția dentară</span>
+    </label>
+    <label class="chapter-option">
+      <input type="checkbox" name="capitole" value="Capitol 6" />
+      <span>6.1.7 Diastema</span>
+    </label>
+    <label class="chapter-option">
+      <input type="checkbox" name="capitole" value="Capitol 6" />
+      <span>6.2.1 Compresiunea de maxilar</span>
+    </label>
+    <label class="chapter-option">
+      <input type="checkbox" name="capitole" value="Capitol 6" />
+      <span>6.2.2 Ocluzia adâncă acoperită</span>
+    </label>
+    <label class="chapter-option">
+      <input type="checkbox" name="capitole" value="Capitol 6" />
+      <span>6.2.3 Ocluzia deschisă</span>
+    </label>
+    <label class="chapter-option">
+      <input type="checkbox" name="capitole" value="Capitol 6" />
+      <span>6.2.4 Sindromul Progenic (prognatismul mandibular)</span>
+    </label>
+  </div>
+</div>
+<div class="capitol-grup">
+  <div class="capitol-header">
+    <label class="capitol-mare">
+      <input type="checkbox" class="master-checkbox" data-target="capitol-7" />
+      <span>Cap. 7. CHIRURGIE ORO-MAXILO-FACIALĂ</span>
+    </label>
+    <button type="button" class="toggle-subcapitole" data-target="capitol-7">▼</button>
+  </div>
+  <div class="subcapitole hidden" id="capitol-7">
+    <label class="chapter-option"><input type="checkbox" name="capitole" value="Capitol 7" /><span>7.01 Substanțe anestezice utilizate în stomatologie</span></label>
+    <label class="chapter-option"><input type="checkbox" name="capitole" value="Capitol 7" /><span>7.02 Tehnici folosite în anestezia loco-regională</span></label>
+    <label class="chapter-option"><input type="checkbox" name="capitole" value="Capitol 7" /><span>7.03 Accidente și complicații ale anesteziei loco-regionale în stomatologie</span></label>
+    <label class="chapter-option"><input type="checkbox" name="capitole" value="Capitol 7" /><span>7.04 Indicațiile extracției dentare</span></label>
+    <label class="chapter-option"><input type="checkbox" name="capitole" value="Capitol 7" /><span>7.05 Contraindicații în extracția dentară</span></label>
+    <label class="chapter-option"><input type="checkbox" name="capitole" value="Capitol 7" /><span>7.06 Extracția dentară cu separație interradiculară</span></label>
+    <label class="chapter-option"><input type="checkbox" name="capitole" value="Capitol 7" /><span>7.07 Extracția prin alveolotomie</span></label>
+    <label class="chapter-option"><input type="checkbox" name="capitole" value="Capitol 7" /><span>7.08 Accidente și complicații ale extracției dentare</span></label>
+    <label class="chapter-option"><input type="checkbox" name="capitole" value="Capitol 7" /><span>7.09 Tulburări</span></label>
+    <label class="chapter-option"><input type="checkbox" name="capitole" value="Capitol 7" /><span>7.10 Odontectomia molarului de minte inferior</span></label>
+    <label class="chapter-option"><input type="checkbox" name="capitole" value="Capitol 7" /><span>7.11 Odontectomia caninului superior</span></label>
+    <label class="chapter-option"><input type="checkbox" name="capitole" value="Capitol 7" /><span>7.12 Tipuri de lambouri pentru rezecția apicală</span></label>
+    <label class="chapter-option"><input type="checkbox" name="capitole" value="Capitol 7" /><span>7.13 Tratamentul chirurgical preprotetic al părților moi</span></label>
+    <label class="chapter-option"><input type="checkbox" name="capitole" value="Capitol 7" /><span>7.14 Infecțiile periosoase</span></label>
+    <label class="chapter-option"><input type="checkbox" name="capitole" value="Capitol 7" /><span>7.15 Infecții difuze oro-maxilo-faciale</span></label>
+    <label class="chapter-option"><input type="checkbox" name="capitole" value="Capitol 7" /><span>7.16 Fasciita necrozantă cervicală</span></label>
+    <label class="chapter-option"><input type="checkbox" name="capitole" value="Capitol 7" /><span>7.17 Infecțiile nespecifice ale oaselor maxilare</span></label>
+    <label class="chapter-option"><input type="checkbox" name="capitole" value="Capitol 7" /><span>7.18 Osteonecroza maxilarelor</span></label>
+    <label class="chapter-option"><input type="checkbox" name="capitole" value="Capitol 7" /><span>7.19 Comunicarea oro-sinuzală</span></label>
+    <label class="chapter-option"><input type="checkbox" name="capitole" value="Capitol 7" /><span>7.20 Traumatologie oro-maxilo-facială</span></label>
+    <label class="chapter-option"><input type="checkbox" name="capitole" value="Capitol 7" /><span>7.21 Chisturi și tumori benigne ale părților moi orale și cervico-faciale</span></label>
+    <label class="chapter-option"><input type="checkbox" name="capitole" value="Capitol 7" /><span>7.22 Chisturi, tumori benigne și osteopatii ale oaselor maxilare</span></label>
+    <label class="chapter-option"><input type="checkbox" name="capitole" value="Capitol 7" /><span>7.23 Tumori maligne oro-maxilo-faciale</span></label>
+    <label class="chapter-option"><input type="checkbox" name="capitole" value="Capitol 7" /><span>7.24 Luxația temporo-mandibulară</span></label>
+    <label class="chapter-option"><input type="checkbox" name="capitole" value="Capitol 7" /><span>7.25 Anchiloza temporo-mandibulară</span></label>
+    <label class="chapter-option"><input type="checkbox" name="capitole" value="Capitol 7" /><span>7.26 Patologia glandelor salivare</span></label>
+    <label class="chapter-option"><input type="checkbox" name="capitole" value="Capitol 7" /><span>7.27 Despicăturile labio-maxilo-palatine</span></label>
+  </div>
+</div>
+
+<div class="capitol-grup">
+  <div class="capitol-header">
+    <label class="capitol-mare">
+      <input type="checkbox" class="master-checkbox" data-target="capitol-8" />
+      <span>Cap. 8. SUBIECTE 2021-2025 PE CAPITOLE</span>
+    </label>
+    <button type="button" class="toggle-subcapitole" data-target="capitol-8">▼</button>
+  </div>
+  <div class="subcapitole hidden" id="capitol-8">
+    <label class="chapter-option"><input type="checkbox" name="capitole" value="Subiecte" /><span>01. Odontoterapie</span></label>
+    <label class="chapter-option"><input type="checkbox" name="capitole" value="Subiecte" /><span>02. Endodonţie</span></label>
+    <label class="chapter-option"><input type="checkbox" name="capitole" value="Subiecte" /><span>03. Protetică dentară</span></label>
+    <label class="chapter-option"><input type="checkbox" name="capitole" value="Subiecte" /><span>04. Parodontologie</span></label>
+    <label class="chapter-option"><input type="checkbox" name="capitole" value="Subiecte" /><span>05. Pedodonţie</span></label>
+    <label class="chapter-option"><input type="checkbox" name="capitole" value="Subiecte" /><span>06. Ortodonţie şi ortopedie dento-facială</span></label>
+    <label class="chapter-option"><input type="checkbox" name="capitole" value="Subiecte" /><span>07. Chirurgie OMF</span></label>
+  </div>
+</div>
+
+<div class="capitol-grup">
+  <div class="capitol-header">
+    <label class="capitol-mare">
+      <input type="checkbox" class="master-checkbox" data-target="capitol-9" />
+      <span>Cap. 9. SUBIECTE ANTERIOARE</span>
+    </label>
+    <button type="button" class="toggle-subcapitole" data-target="capitol-9">▼</button>
+  </div>
+  <div class="subcapitole hidden" id="capitol-9">
+    <label class="chapter-option"><input type="checkbox" name="capitole" value="Anterioare" /><span>Rezidențiat Medicină Dentară - 16 noiembrie 2025</span></label>
+    <label class="chapter-option"><input type="checkbox" name="capitole" value="Anterioare" /><span>Rezidențiat Medicină Dentară - 17 noiembrie 2024</span></label>
+    <label class="chapter-option"><input type="checkbox" name="capitole" value="Anterioare" /><span>Rezidențiat Medicină Dentară - 19 noiembrie 2023</span></label>
+    <label class="chapter-option"><input type="checkbox" name="capitole" value="Anterioare" /><span>Rezidențiat Medicină Dentară - 20 noiembrie 2022</span></label>
+    <label class="chapter-option"><input type="checkbox" name="capitole" value="Anterioare" /><span>Rezidențiat Medicină Dentară - 21 noiembrie 2021</span></label>
+    <label class="chapter-option"><input type="checkbox" name="capitole" value="Anterioare" /><span>Simulare națională - 15 octombrie 2022</span></label>
+    <label class="chapter-option"><input type="checkbox" name="capitole" value="Anterioare" /><span>Simulare națională - octombrie 2023</span></label>
+    <label class="chapter-option"><input type="checkbox" name="capitole" value="Anterioare" /><span>Simulare națională - octombrie 2024</span></label>
+    <label class="chapter-option"><input type="checkbox" name="capitole" value="Anterioare" /><span>Simulare națională - octombrie 2025</span></label>
+  </div>
+</div>
+
+ </template>
+<div id="questionCatalog" class="question-catalog"></div>
+
+        <div class="test-actions">
+          <div class="test-actions-copy">
+            <span class="eyebrow">Ultimul pas</span>
+            <strong>Alege dimensiunea testului</strong>
+            <small id="questionCountHint">Selectează subcapitolele pentru a vedea numărul maxim de întrebări.</small>
+          </div>
+          <div class="input-group">
+            <input type="number" id="numarIntrebari" required min="1" max="1" placeholder=" " inputmode="numeric" />
+            <label for="numarIntrebari">Număr întrebări</label>
+          </div>
+
+          <button type="submit" class="btn">
+            <span>Începe testul</span>
+            <span class="button-arrow" aria-hidden="true">→</span>
+          </button>
+          <p id="formMessage" class="form-message" role="alert" hidden></p>
+        </div>
+      </form>
+    </div>
+
+    <!-- Simulare -->
+  <div id="simulare-container" class="hidden-view">
+  <div class="simulare-hero">
+    <div class="simulare-header">
+      <div>
+        <span class="eyebrow">Experiență completă</span>
+        <h2 class="title">Simulare examen național</h2>
+      </div>
+      <span class="badge">Nou</span>
+    </div>
+
+    <p class="simulare-desc">
+      Aceasta este o simulare completă, alcătuită din <strong>200 de grile</strong>.
+      Timp alocat: <strong>4 ore (240 minute)</strong>. La expirarea timpului,
+      testul se finalizează automat.
+    </p>
+
+    <ul class="tips-list">
+      <li class="tip-item">🧃 Ia-ți apă și ceva de ronțăit (gustări ușoare).</li>
+      <li class="tip-item">🔕 Alege un loc liniștit, fără întreruperi.</li>
+      <li class="tip-item">🕰️ Setează-ți telefonul pe „Nu deranja”.</li>
+      <li class="tip-item">💡 Verifică-ți conexiunea la internet și încărcătorul.</li>
+    </ul>
+
+    <div class="simulare-actions">
+      <button id="startSimulareBtn" type="button" class="btn start-btn">
+        <span>Start simulare</span>
+        <span class="button-arrow" aria-hidden="true">→</span>
+      </button>
+      <p class="simulare-note">După start, cronometrul pornește și nu poate fi pus pe pauză.</p>
+    </div>
+  </div>
+</div>
+
+  </section>
+  </main>
+
+  <footer class="app-footer">
+    <span>Grile Diana</span>
+    <span aria-hidden="true">•</span>
+    <span>Un pas mai aproape de rezidențiat</span>
+  </footer>
+
+
+  <script src="data/question-bank.js"></script>
+  <script src="file-store.js"></script>
+  <script src="app-core.js"></script>
+  <script src="selectare.js"></script>
+</body>
+</html>

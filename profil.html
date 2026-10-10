@@ -1,0 +1,437 @@
+<!DOCTYPE html>
+<html lang="ro">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <link rel="icon" type="image/png" href="assets/grile-diana-icon.png" />
+  <meta name="theme-color" content="#f3f7fa" />
+  <meta name="description" content="Profilul de studiu al Dianei: progres, rezultate și istoricul testelor pentru Rezidențiat Stomatologie." />
+  <title>Profil Diana — Grile Rezidențiat</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+  <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@400;500;600;700;800&display=swap" rel="stylesheet" />
+  <link rel="stylesheet" href="profile.css" />
+</head>
+<body>
+  <div class="page-decoration decoration-one" aria-hidden="true"></div>
+  <div class="page-decoration decoration-two" aria-hidden="true"></div>
+
+  <header class="app-header">
+    <a class="brand" href="selectare.html" aria-label="Grile Diana — pagina de selectare">
+      <span class="brand-mark" aria-hidden="true">D</span>
+      <span class="brand-copy">
+        <strong>Grile Diana</strong>
+        <small>Rezidențiat Stomatologie</small>
+      </span>
+    </a>
+
+    <nav class="header-actions" aria-label="Navigare principală">
+      <a class="header-link" href="flashcards.html">Flashcarduri</a>
+      <a class="header-link" href="materiale.html">Notițe</a>
+      <a class="header-link" href="selectare.html">
+        <span aria-hidden="true">←</span>
+        Test nou
+      </a>
+      <span class="profile-chip" aria-current="page">
+        <span class="profile-chip-avatar" aria-hidden="true">D</span>
+        Profilul meu
+      </span>
+    </nav>
+  </header>
+
+  <main class="page-shell">
+    <section class="profile-hero" aria-labelledby="profile-title">
+      <div class="profile-identity">
+        <div class="avatar" aria-hidden="true">D</div>
+        <div>
+          <span class="eyebrow">Dashboard personal</span>
+          <h1 id="profile-title">Bună, Diana!</h1>
+          <p>Aici găsești progresul tău complet, întrebările parcurse și toate rezultatele salvate.</p>
+        </div>
+      </div>
+
+      <div class="hero-side">
+        <div class="local-status">
+          <span class="status-dot" aria-hidden="true"></span>
+          <span>
+            <strong>Date salvate local</strong>
+            <small id="lastUpdateText">Nu există încă activitate</small>
+          </span>
+        </div>
+        <button id="exportBackupBtn" class="export-button" type="button">
+          <span class="export-icon" aria-hidden="true">↓</span>
+          Exportă backup JSON
+        </button>
+        <input id="importBackupInput" class="sr-only" type="file" accept="application/json,.json" />
+        <button id="importBackupBtn" class="export-button import-button" type="button">
+          <span class="export-icon" aria-hidden="true">↑</span>
+          Importă backup JSON
+        </button>
+      </div>
+    </section>
+
+    <div id="dataWarning" class="data-warning" role="alert" hidden></div>
+    <div id="actionMessage" class="action-message" role="status" aria-live="polite" hidden></div>
+
+    <section class="overview-section" aria-labelledby="overview-title">
+      <div class="section-heading">
+        <div>
+          <span class="eyebrow">Imagine de ansamblu</span>
+          <h2 id="overview-title">Progresul tău</h2>
+        </div>
+        <p id="overviewSummary">Statisticile se actualizează după fiecare răspuns.</p>
+      </div>
+
+      <div class="stat-grid">
+        <article class="stat-card stat-tests">
+          <div class="stat-icon" aria-hidden="true">✓</div>
+          <div>
+            <span>Teste finalizate</span>
+            <strong id="statTests">0</strong>
+            <small id="statBest">Cel mai bun rezultat: —</small>
+          </div>
+        </article>
+
+        <article class="stat-card stat-attempted">
+          <div class="stat-icon" aria-hidden="true">◎</div>
+          <div>
+            <span>Întrebări parcurse</span>
+            <strong id="statAttempted">0</strong>
+            <small id="statCoverage">0% din banca disponibilă</small>
+          </div>
+        </article>
+
+        <article class="stat-card stat-correct">
+          <div class="stat-icon" aria-hidden="true">↗</div>
+          <div>
+            <span>Corecte în prezent</span>
+            <strong id="statCorrect">0</strong>
+            <small id="statAccuracy">Acuratețe curentă: —</small>
+          </div>
+        </article>
+
+        <article class="stat-card stat-average">
+          <div class="stat-icon" aria-hidden="true">★</div>
+          <div>
+            <span>Media rezultatelor</span>
+            <strong id="statAverage">—</strong>
+            <small>Calculată din testele finalizate</small>
+          </div>
+        </article>
+      </div>
+
+      <article class="coverage-card">
+        <div class="coverage-main">
+          <div class="coverage-copy">
+            <span class="eyebrow">Acoperirea materiei</span>
+            <strong id="coverageHeadline">0 din 0 întrebări parcurse</strong>
+            <p>O întrebare este considerată parcursă după primul răspuns salvat.</p>
+          </div>
+          <strong id="coveragePercent" class="coverage-percent">0%</strong>
+        </div>
+        <div class="coverage-track" aria-hidden="true">
+          <span id="coverageBar"></span>
+        </div>
+        <dl class="coverage-details">
+          <div>
+            <dt>Rămase</dt>
+            <dd id="statRemaining">0</dd>
+          </div>
+          <div>
+            <dt>Greșite în prezent</dt>
+            <dd id="statWrong">0</dd>
+          </div>
+          <div>
+            <dt>Încercări totale</dt>
+            <dd id="statTotalAttempts">0</dd>
+          </div>
+          <div>
+            <dt>Răspunsuri corecte</dt>
+            <dd id="statCorrectAttempts">0</dd>
+          </div>
+        </dl>
+      </article>
+    </section>
+
+    <section class="learning-section" aria-labelledby="learning-title">
+      <div class="section-heading learning-heading">
+        <div>
+          <span class="eyebrow">Activitate de învățare</span>
+          <h2 id="learning-title">Flashcarduri și notițe</h2>
+          <p>Progresul se salvează după fiecare evaluare, secțiune parcursă sau completare verificată.</p>
+        </div>
+        <span id="learningLastUpdate" class="learning-last-update">Nicio activitate de învățare încă</span>
+      </div>
+
+      <div class="learning-grid">
+        <article class="learning-card flashcard-learning-card">
+          <header class="learning-card-header">
+            <div class="learning-card-title">
+              <span class="learning-symbol flashcard-symbol" aria-hidden="true">F</span>
+              <div>
+                <span class="eyebrow">Repetiție activă</span>
+                <h3>Flashcarduri</h3>
+              </div>
+            </div>
+            <a class="learning-link" href="flashcards.html">Continuă studiul <span aria-hidden="true">→</span></a>
+          </header>
+
+          <div class="learning-progress-copy">
+            <strong id="flashcardProgressHeadline">0 din 6.099 parcurse</strong>
+            <span id="flashcardCoverage">0% acoperire</span>
+          </div>
+          <div class="learning-progress-track" aria-hidden="true">
+            <span id="flashcardCoverageBar"></span>
+          </div>
+
+          <dl class="learning-metrics">
+            <div>
+              <dt>Recapitulări</dt>
+              <dd id="flashcardReviews">0</dd>
+            </div>
+            <div>
+              <dt>Consolidate</dt>
+              <dd id="flashcardMastered">0</dd>
+            </div>
+            <div>
+              <dt>Scadente</dt>
+              <dd id="flashcardDue">0</dd>
+            </div>
+            <div>
+              <dt>Încredere medie</dt>
+              <dd id="flashcardConfidence">—</dd>
+            </div>
+          </dl>
+          <p id="flashcardLastUpdate" class="card-last-update">Nu ai evaluat încă niciun flashcard.</p>
+        </article>
+
+        <article class="learning-card notes-learning-card">
+          <header class="learning-card-header">
+            <div class="learning-card-title">
+              <span class="learning-symbol notes-symbol" aria-hidden="true">N</span>
+              <div>
+                <span class="eyebrow">Materiale și completări</span>
+                <h3>Notițe</h3>
+              </div>
+            </div>
+            <a class="learning-link notes-link" href="materiale.html">Deschide notițele <span aria-hidden="true">→</span></a>
+          </header>
+
+          <div class="learning-progress-copy">
+            <strong id="notesProgressHeadline">0 parcurse · 0 din 1.951 completate</strong>
+            <span id="notesCoverage">0% acoperire</span>
+          </div>
+          <div class="learning-progress-track notes-progress-track" aria-hidden="true">
+            <span id="notesCoverageBar"></span>
+          </div>
+
+          <dl class="learning-metrics notes-metrics">
+            <div>
+              <dt>Secțiuni testate</dt>
+              <dd id="notesTested">0</dd>
+            </div>
+            <div>
+              <dt>Completări corecte</dt>
+              <dd id="notesCorrectAnswers">0 / 0</dd>
+            </div>
+            <div>
+              <dt>Acuratețe</dt>
+              <dd id="notesAccuracy">—</dd>
+            </div>
+            <div>
+              <dt>Subcapitole începute</dt>
+              <dd id="notesStartedSubchapters">0 / 72</dd>
+            </div>
+            <div>
+              <dt>Subcapitole finalizate</dt>
+              <dd id="notesCompletedSubchapters">0 / 72</dd>
+            </div>
+            <div>
+              <dt>Sesiuni de test</dt>
+              <dd id="notesTestRuns">0</dd>
+            </div>
+          </dl>
+          <p id="notesLastUpdate" class="card-last-update">Nu ai parcurs încă nicio secțiune de notițe.</p>
+        </article>
+      </div>
+    </section>
+
+    <section class="content-section history-section" aria-labelledby="history-title">
+      <div class="section-heading section-heading-inline">
+        <div>
+          <span class="eyebrow">Evoluție în timp</span>
+          <h2 id="history-title">Istoricul testelor și al notelor</h2>
+          <p>Rezultatele sunt ordonate implicit de la cel mai recent.</p>
+        </div>
+        <div class="history-controls">
+          <label>
+            <span class="sr-only">Filtrează istoricul după tip</span>
+            <select id="historyModeFilter">
+              <option value="all">Toate testele</option>
+              <option value="practice">Teste personalizate</option>
+              <option value="mistakes">Teste din greșeli</option>
+              <option value="exam">Simulări examen</option>
+            </select>
+          </label>
+          <label>
+            <span class="sr-only">Ordonează istoricul</span>
+            <select id="historySortFilter">
+              <option value="newest">Cele mai recente</option>
+              <option value="oldest">Cele mai vechi</option>
+              <option value="best">Nota cea mai mare</option>
+              <option value="lowest">Nota cea mai mică</option>
+            </select>
+          </label>
+        </div>
+      </div>
+
+      <div class="table-shell history-table-shell">
+        <table class="data-table history-table">
+          <caption class="sr-only">Istoricul testelor finalizate</caption>
+          <thead>
+            <tr>
+              <th scope="col">Data</th>
+              <th scope="col">Tip test</th>
+              <th scope="col">Întrebări</th>
+              <th scope="col">Corecte</th>
+              <th scope="col">Punctaj</th>
+              <th scope="col">Notă</th>
+            </tr>
+          </thead>
+          <tbody id="historyTableBody"></tbody>
+        </table>
+        <div id="historyEmpty" class="empty-state" hidden>
+          <span class="empty-icon" aria-hidden="true">⌁</span>
+          <strong>Nu există încă teste finalizate</strong>
+          <p>După primul test, rezultatul și nota vor apărea automat aici.</p>
+          <a href="selectare.html">Începe un test</a>
+        </div>
+      </div>
+      <p id="historyCount" class="result-count" aria-live="polite"></p>
+    </section>
+
+    <section class="content-section questions-section" aria-labelledby="questions-title">
+      <div class="section-heading">
+        <div>
+          <span class="eyebrow">Analiză detaliată</span>
+          <h2 id="questions-title">Statisticile pe întrebări</h2>
+          <p>Ultima rezolvare stabilește statusul curent; toate încercările rămân contorizate.</p>
+        </div>
+      </div>
+
+      <div class="filter-panel" aria-label="Filtre pentru statistici">
+        <label class="search-field">
+          <span class="search-icon" aria-hidden="true">⌕</span>
+          <span class="sr-only">Caută o întrebare</span>
+          <input id="questionSearch" type="search" autocomplete="off" placeholder="Caută după text, ID, capitol sau subcapitol…" />
+        </label>
+
+        <label class="filter-field">
+          <span>Status</span>
+          <select id="statusFilter">
+            <option value="all">Toate</option>
+            <option value="correct">Corecte</option>
+            <option value="wrong">Greșite</option>
+          </select>
+        </label>
+
+        <label class="filter-field">
+          <span>Capitol</span>
+          <select id="chapterFilter">
+            <option value="all">Toate capitolele</option>
+          </select>
+        </label>
+
+        <label class="filter-field">
+          <span>Subcapitol</span>
+          <select id="subchapterFilter">
+            <option value="all">Toate subcapitolele</option>
+          </select>
+        </label>
+
+        <label class="filter-field compact-filter">
+          <span>Tip</span>
+          <select id="typeFilter">
+            <option value="all">CS + CM</option>
+            <option value="CS">CS</option>
+            <option value="CM">CM</option>
+          </select>
+        </label>
+
+        <label class="filter-field sort-filter">
+          <span>Ordonare</span>
+          <select id="questionSortFilter">
+            <option value="recent">Ultima activitate</option>
+            <option value="oldest">Prima activitate</option>
+            <option value="attempts">Cele mai multe încercări</option>
+            <option value="wrong">Cele mai multe greșeli</option>
+            <option value="id">ID întrebare</option>
+          </select>
+        </label>
+
+        <button id="resetFiltersBtn" class="reset-button" type="button">Resetează</button>
+      </div>
+
+      <div class="table-toolbar">
+        <p id="questionResultCount" class="result-count" aria-live="polite">0 întrebări</p>
+        <span class="table-hint">Glisează tabelul lateral pe ecranele mici.</span>
+      </div>
+
+      <div class="table-shell question-table-shell">
+        <table class="data-table question-table">
+          <caption class="sr-only">Statistici pentru fiecare întrebare rezolvată</caption>
+          <thead>
+            <tr>
+              <th scope="col">Întrebare</th>
+              <th scope="col">Capitol</th>
+              <th scope="col">Subcapitol</th>
+              <th scope="col">Status</th>
+              <th scope="col">Încercări</th>
+              <th scope="col">Corecte</th>
+              <th scope="col">Greșite</th>
+              <th scope="col">Ultimul punctaj</th>
+              <th scope="col">Data</th>
+            </tr>
+          </thead>
+          <tbody id="questionTableBody"></tbody>
+        </table>
+        <div id="questionsEmpty" class="empty-state" hidden>
+          <span class="empty-icon" aria-hidden="true">?</span>
+          <strong id="questionsEmptyTitle">Nicio întrebare parcursă încă</strong>
+          <p id="questionsEmptyText">Rezolvă primul test pentru a începe să construiești statisticile.</p>
+          <a id="questionsEmptyLink" href="selectare.html">Generează un test</a>
+        </div>
+      </div>
+
+      <nav id="questionPagination" class="pagination" aria-label="Paginarea statisticilor" hidden>
+        <button id="previousPageBtn" type="button" aria-label="Pagina anterioară">←</button>
+        <span id="pageInfo" aria-live="polite">Pagina 1 din 1</span>
+        <button id="nextPageBtn" type="button" aria-label="Pagina următoare">→</button>
+      </nav>
+    </section>
+
+    <aside class="privacy-note">
+      <span class="privacy-icon" aria-hidden="true">◆</span>
+      <div class="privacy-copy">
+        <strong>Datele tale rămân pe acest dispozitiv</strong>
+        <p>Progresul grilelor, lista întrebărilor greșite, flashcardurile și notițele sunt păstrate local. Exportă periodic backupul JSON și îl poți restaura direct cu butonul de import.</p>
+      </div>
+      <button id="resetProgressBtn" class="reset-progress-button" type="button">
+        Resetează tot progresul
+      </button>
+    </aside>
+  </main>
+
+  <footer class="app-footer">
+    <span>Grile Diana</span>
+    <a href="selectare.html">Înapoi la selectarea testului</a>
+  </footer>
+
+  <script src="data/question-bank.js"></script>
+  <script src="data/flashcard-bank.js"></script>
+  <script src="data/notes-bank.js"></script>
+  <script src="file-store.js"></script>
+  <script src="app-core.js"></script>
+  <script src="profile.js"></script>
+</body>
+</html>

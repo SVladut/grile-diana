@@ -1,0 +1,21 @@
+GRILE DIANA — INSTRUCȚIUNI
+==========================
+
+1. Extrage întreaga arhivă într-un folder.
+2. Deschide „Grile Diana.exe”.
+3. Aplicația se va deschide automat în browserul implicit.
+
+Nu trebuie instalat Node.js și nu sunt necesare drepturi de administrator.
+
+Aplicația rămâne activă în zona de notificări, lângă ceas.
+- dublu click pe iconiță: redeschide aplicația în browser;
+- click dreapta → „Închide aplicația”: oprește serverul local.
+
+Dacă Windows afișează avertismentul SmartScreen pentru aplicația descărcată,
+alege „Mai multe informații”, apoi „Rulează oricum”. Executabilul nu este
+semnat digital.
+
+Progresul este păstrat automat în profilul Windows al utilizatorului, în:
+%LOCALAPPDATA%\Grile Diana\diana-state.json
+
+Astfel, progresul rămâne salvat și când primești o versiune nouă a aplicației.

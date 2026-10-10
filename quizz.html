@@ -1,0 +1,216 @@
+<!DOCTYPE html>
+<html lang="ro">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <link rel="icon" type="image/png" href="assets/grile-diana-icon.png" />
+  <meta name="theme-color" content="#f3f7fa" />
+  <title>Quiz — Grile Diana</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+  <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@400;500;600;700;800&display=swap" rel="stylesheet" />
+  <link rel="stylesheet" href="quiz.css" />
+</head>
+<body class="quiz-page">
+  <header class="quiz-header">
+    <a class="brand" href="selectare.html" aria-label="Grile Diana — înapoi la selectare">
+      <span class="brand-mark" aria-hidden="true">D</span>
+      <span class="brand-copy">
+        <strong>Grile Diana</strong>
+        <small>Rezidențiat Stomatologie</small>
+      </span>
+    </a>
+    <nav class="quiz-header-actions" aria-label="Navigare">
+      <a class="profile-header-link" href="flashcards.html">Flashcarduri</a>
+      <a class="profile-header-link" href="materiale.html">Notițe</a>
+      <a class="profile-header-link" href="profil.html">Profilul meu</a>
+      <a class="exit-link" href="selectare.html">
+        <span aria-hidden="true">←</span>
+        Salvează și ieși
+      </a>
+    </nav>
+  </header>
+
+  <main class="quiz-shell">
+    <section id="quizView" class="quiz-view" hidden>
+      <div class="quiz-overview">
+        <div class="overview-copy">
+          <span id="sessionMode" class="session-mode">Test personalizat</span>
+          <strong id="progressLabel">0 din 0 rezolvate</strong>
+        </div>
+        <div id="timerPanel" class="timer-panel" hidden>
+          <span class="timer-label">Timp rămas</span>
+          <strong id="timer">04:00:00</strong>
+        </div>
+      </div>
+
+      <div class="progress-track" aria-hidden="true">
+        <span id="progressBar"></span>
+      </div>
+
+      <div class="quiz-layout">
+        <article class="question-card" aria-labelledby="questionText">
+          <div class="question-meta">
+            <div class="question-context">
+              <span id="chapterLabel">Capitol</span>
+              <span id="contextSeparator" aria-hidden="true">/</span>
+              <strong id="subchapterLabel">Subcapitol</strong>
+              <span id="pageSeparator" aria-hidden="true" hidden>•</span>
+              <span id="pageLabel" hidden>Pag.</span>
+            </div>
+            <span id="questionType" class="type-badge">CS</span>
+          </div>
+
+          <div class="question-number" id="questionNumber">Întrebarea 1 din 10</div>
+          <h1 id="questionText" tabindex="-1">Întrebarea se încarcă…</h1>
+          <p id="answerInstruction" class="answer-instruction"></p>
+
+          <form id="answerForm" class="answer-form">
+            <fieldset id="answersList" class="answers-list">
+              <legend class="sr-only">Variante de răspuns</legend>
+            </fieldset>
+
+            <div id="selectionWarning" class="selection-warning" role="status" hidden></div>
+
+            <div id="answerFeedback" class="answer-feedback" role="status" aria-live="polite" hidden>
+              <div class="feedback-summary">
+                <span id="feedbackIcon" class="feedback-icon" aria-hidden="true"></span>
+                <div>
+                  <strong id="feedbackTitle"></strong>
+                  <p id="feedbackPoints"></p>
+                </div>
+              </div>
+              <div id="selectedAnswerFeedback" class="feedback-answer-block selected-answer-feedback">
+                <span>Răspunsul tău</span>
+                <div id="selectedAnswerList" class="answer-result-list"></div>
+              </div>
+              <div id="correctAnswerFeedback" class="feedback-correct-answer" hidden>
+                <span>Răspunsul corect</span>
+                <div id="correctAnswerText" class="answer-result-list"></div>
+              </div>
+            </div>
+
+            <div class="question-actions">
+              <button id="deferBtn" type="button" class="secondary-button">
+                <span aria-hidden="true">↻</span>
+                Răspund mai târziu
+              </button>
+              <button id="answerBtn" type="submit" class="primary-button" disabled>
+                Salvează răspunsul
+                <span aria-hidden="true">→</span>
+              </button>
+              <button id="nextBtn" type="button" class="primary-button" hidden>
+                <span id="nextBtnLabel">Următoarea întrebare</span>
+                <span aria-hidden="true">→</span>
+              </button>
+            </div>
+          </form>
+        </article>
+
+        <aside class="queue-panel" aria-label="Starea testului">
+          <div class="queue-icon" aria-hidden="true">✓</div>
+          <h2>Ritmul tău, fără presiune</h2>
+          <p>Poți amâna orice întrebare. O mutăm la finalul cozii și revenim la ea după prima parcurgere.</p>
+
+          <dl class="queue-stats">
+            <div>
+              <dt>Rezolvate</dt>
+              <dd id="answeredStat">0</dd>
+            </div>
+            <div>
+              <dt>În așteptare</dt>
+              <dd id="pendingStat">0</dd>
+            </div>
+            <div>
+              <dt>Amânări</dt>
+              <dd id="deferredStat">0</dd>
+            </div>
+          </dl>
+
+          <div id="reviewNotice" class="review-notice" hidden>
+            <strong>Ai parcurs lista inițială.</strong>
+            <span>Acum reluăm întrebările rămase fără răspuns.</span>
+          </div>
+
+          <button id="finishBtn" type="button" class="finish-button" hidden>
+            Finalizează cu întrebări fără răspuns
+          </button>
+        </aside>
+      </div>
+    </section>
+
+    <section id="resultView" class="result-view" hidden aria-labelledby="resultTitle">
+      <div class="result-hero">
+        <div>
+          <span id="resultEyebrow" class="result-eyebrow">Test finalizat</span>
+          <h1 id="resultTitle">Rezultatul tău</h1>
+          <p id="resultSubtitle"></p>
+        </div>
+        <div class="result-score-ring">
+          <strong id="resultPercentage">0%</strong>
+          <span>din punctaj</span>
+        </div>
+      </div>
+
+      <div class="result-cards">
+        <article>
+          <span>Întrebări corecte</span>
+          <strong id="correctResult">0 / 0</strong>
+          <small>răspunsuri integral corecte</small>
+        </article>
+        <article>
+          <span>Punctaj obținut</span>
+          <strong id="pointsResult">0 / 0</strong>
+          <small>conform regulilor CS și CM</small>
+        </article>
+        <article>
+          <span>Fără răspuns</span>
+          <strong id="unansweredResult">0</strong>
+          <small>nu modifică progresul materiei</small>
+        </article>
+      </div>
+
+      <div class="result-actions">
+        <div class="result-file-copy">
+          <strong>Rezultatul este păstrat în profilul tău</strong>
+          <span id="resultFileStatus" role="status">Poți descărca și raportul complet ca fișier HTML.</span>
+        </div>
+        <div class="result-action-buttons">
+          <button id="downloadResultBtn" type="button" class="download-button">Descarcă raportul</button>
+          <a class="secondary-link" href="profil.html">Vezi profilul</a>
+          <a class="primary-link" href="selectare.html">Test nou <span aria-hidden="true">→</span></a>
+        </div>
+      </div>
+
+      <section class="review-section" aria-labelledby="reviewTitle">
+        <div class="review-heading">
+          <div>
+            <span class="result-eyebrow">Recapitulare</span>
+            <h2 id="reviewTitle">Întrebări de revăzut</h2>
+          </div>
+          <span id="reviewCount" class="review-count">0 întrebări</span>
+        </div>
+        <div id="reviewList" class="review-list"></div>
+        <div id="perfectResult" class="perfect-result" hidden>
+          <span aria-hidden="true">✓</span>
+          <strong>Felicitări! Toate răspunsurile sunt corecte.</strong>
+        </div>
+      </section>
+    </section>
+
+    <section id="errorView" class="error-view" hidden>
+      <span aria-hidden="true">!</span>
+      <h1>Testul nu poate fi deschis</h1>
+      <p id="errorMessage">Nu există o sesiune activă.</p>
+      <a href="selectare.html">Înapoi la selectare</a>
+    </section>
+  </main>
+
+  <div id="toast" class="toast" role="status" aria-live="polite" hidden></div>
+
+  <script src="data/question-bank.js"></script>
+  <script src="file-store.js"></script>
+  <script src="app-core.js"></script>
+  <script src="quiz.js"></script>
+</body>
+</html>

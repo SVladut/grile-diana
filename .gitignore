@@ -1,0 +1,11 @@
+# Per-device user progress and generated/source data.
+data/*.json
+
+# Local Windows distribution artifacts.
+*.zip
+*.exe
+/GRILE DIA bun/
+/grile_db.sql
+
+# Generated deployment artifact.
+/_site/

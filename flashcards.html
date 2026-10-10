@@ -1,0 +1,189 @@
+<!DOCTYPE html>
+<html lang="ro">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <link rel="icon" type="image/png" href="assets/grile-diana-icon.png" />
+  <meta name="theme-color" content="#f3f7fa" />
+  <title>Flashcarduri — Grile Diana</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+  <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@400;500;600;700;800&display=swap" rel="stylesheet" />
+  <link rel="stylesheet" href="flashcards.css" />
+</head>
+<body>
+  <header class="app-header">
+    <a class="brand" href="selectare.html" aria-label="Grile Diana — pagina principală">
+      <span class="brand-mark" aria-hidden="true">D</span>
+      <span class="brand-copy">
+        <strong>Grile Diana</strong>
+        <small>Rezidențiat Stomatologie</small>
+      </span>
+    </a>
+    <nav class="header-actions" aria-label="Navigare principală">
+      <a href="selectare.html">Teste grilă</a>
+      <a href="materiale.html">Notițe</a>
+      <a href="profil.html">Profilul meu</a>
+    </nav>
+  </header>
+
+  <main class="flash-shell">
+    <section id="libraryView">
+      <div class="library-hero">
+        <div>
+          <span class="eyebrow">Învățare adaptivă</span>
+          <h1>Flashcarduri care țin pasul cu tine.</h1>
+          <p>Încearcă să răspunzi din memorie, descoperă verso-ul și notează de la 1 la 5 cât de bine ai știut. Cardurile dificile revin mai repede.</p>
+        </div>
+        <dl class="hero-metrics">
+          <div><dt>Total</dt><dd id="totalCards">0</dd><small>carduri</small></div>
+          <div><dt>Parcurse</dt><dd id="studiedCards">0</dd><small>carduri</small></div>
+          <div><dt>Încredere</dt><dd id="averageConfidence">0</dd><small>din 5</small></div>
+        </dl>
+      </div>
+
+      <div id="resumeFlashcards" class="resume-banner" hidden>
+        <span class="resume-icon" aria-hidden="true">↻</span>
+        <div>
+          <strong>Ai o sesiune de flashcarduri în desfășurare</strong>
+          <p id="resumeFlashcardText"></p>
+        </div>
+        <div class="resume-actions">
+          <button id="discardFlashcardSession" type="button" class="text-button">Renunță</button>
+          <button id="resumeFlashcardSession" type="button" class="compact-button">Continuă</button>
+        </div>
+      </div>
+
+      <section class="deck-section" aria-labelledby="deckTitle">
+        <div class="section-heading">
+          <div>
+            <span class="eyebrow">Biblioteca ta</span>
+            <h2 id="deckTitle">Alege capitolele</h2>
+            <p>Cele <span id="libraryCardCount">0</span> de carduri sunt organizate pe capitole și seturi tematice.</p>
+          </div>
+          <button id="selectAllDecks" type="button" class="outline-button">Selectează tot</button>
+        </div>
+        <div id="chapterList" class="chapter-list"></div>
+      </section>
+
+      <form id="studySetup" class="study-setup" novalidate>
+        <div class="setup-copy">
+          <span class="eyebrow">Sesiune nouă</span>
+          <strong id="selectedDeckSummary">Niciun set selectat</strong>
+          <small id="selectedCardSummary">Alege cel puțin un set pentru a începe.</small>
+        </div>
+        <label class="count-field">
+          <span>Evaluări în sesiune</span>
+          <input id="studyCount" type="number" min="1" max="1" placeholder=" " inputmode="numeric" required />
+        </label>
+        <button id="startStudy" type="submit" class="primary-button" disabled>
+          Începe sesiunea <span aria-hidden="true">→</span>
+        </button>
+        <p id="setupMessage" class="form-message" role="alert" hidden></p>
+      </form>
+
+      <div class="library-footer-actions">
+        <p>Notele 1–2 readuc rapid cardul în sesiune; notele 4–5 îl programează mai târziu.</p>
+        <button id="resetFlashcardProgress" type="button" class="danger-button">Resetează progresul flashcardurilor</button>
+      </div>
+    </section>
+
+    <section id="studyView" hidden>
+      <div class="study-overview">
+        <div>
+          <span class="eyebrow">Sesiune adaptivă</span>
+          <strong id="studyProgressLabel">0 din 0 evaluări</strong>
+        </div>
+        <button id="exitStudy" type="button" class="outline-button">Salvează și ieși</button>
+      </div>
+      <div class="progress-track" aria-hidden="true"><span id="studyProgressBar"></span></div>
+
+      <div class="study-layout">
+        <article id="flashcard" class="flashcard" aria-labelledby="cardFrontLabel">
+          <div class="card-meta">
+            <span id="cardChapter">Capitol</span>
+            <span aria-hidden="true">/</span>
+            <strong id="cardDeck">Set</strong>
+            <span id="cardPages" class="page-pill"></span>
+          </div>
+
+          <div class="card-side front-side">
+            <span id="cardFrontLabel" class="side-label">Față · răspunde din memorie</span>
+            <div id="cardFront" class="card-content"></div>
+          </div>
+
+          <button id="revealAnswer" type="button" class="reveal-button">
+            Arată răspunsul <span aria-hidden="true">↓</span>
+          </button>
+
+          <div id="cardBackPanel" class="card-side back-side" hidden>
+            <span class="side-label">Verso · răspuns</span>
+            <div id="cardBack" class="card-content"></div>
+          </div>
+
+          <div id="confidencePanel" class="confidence-panel" hidden>
+            <div class="confidence-heading">
+              <strong>Cât de bine ai știut?</strong>
+              <span>Alege o notă pentru a continua</span>
+            </div>
+            <div class="confidence-buttons" role="group" aria-label="Evaluează încrederea de la 1 la 5">
+              <button type="button" data-confidence="1"><strong>1</strong><span>Deloc</span></button>
+              <button type="button" data-confidence="2"><strong>2</strong><span>Puțin</span></button>
+              <button type="button" data-confidence="3"><strong>3</strong><span>Aproape</span></button>
+              <button type="button" data-confidence="4"><strong>4</strong><span>Bine</span></button>
+              <button type="button" data-confidence="5"><strong>5</strong><span>Perfect</span></button>
+            </div>
+            <p class="keyboard-hint">Poți folosi și tastele 1–5.</p>
+          </div>
+        </article>
+
+        <aside class="study-stats" aria-label="Progresul sesiunii">
+          <div class="focus-orb"><strong id="sessionAverage">0</strong><span>încredere medie</span></div>
+          <dl>
+            <div><dt>Evaluate</dt><dd id="sessionReviewed">0</dd></div>
+            <div><dt>Carduri unice</dt><dd id="sessionUnique">0</dd></div>
+            <div><dt>Încredere câștigată</dt><dd id="sessionGain">+0</dd></div>
+          </dl>
+          <div class="rating-legend">
+            <span><i class="rating-dot low"></i>1–2 · revine repede</span>
+            <span><i class="rating-dot medium"></i>3 · în curs</span>
+            <span><i class="rating-dot high"></i>4–5 · bine fixat</span>
+          </div>
+        </aside>
+      </div>
+    </section>
+
+    <section id="resultView" class="result-view" hidden>
+      <span class="result-icon" aria-hidden="true">✓</span>
+      <span class="eyebrow">Rundă finalizată</span>
+      <h1>Foarte bine. Memoria se construiește repetând.</h1>
+      <p id="resultSummary"></p>
+      <div class="result-metrics">
+        <div><span>Evaluări</span><strong id="resultReviewed">0</strong></div>
+        <div><span>Carduri unice</span><strong id="resultUnique">0</strong></div>
+        <div><span>Încredere medie</span><strong id="resultAverage">0 / 5</strong></div>
+        <div><span>Progres câștigat</span><strong id="resultGain">+0</strong></div>
+      </div>
+      <div class="result-actions">
+        <button id="repeatRound" type="button" class="primary-button">Mai fac o rundă</button>
+        <button id="backToLibrary" type="button" class="outline-button">Înapoi la capitole</button>
+      </div>
+    </section>
+
+    <section id="errorView" class="error-view" hidden>
+      <span aria-hidden="true">!</span>
+      <h1>Flashcardurile nu au putut fi încărcate</h1>
+      <p id="errorMessage"></p>
+      <a href="selectare.html">Înapoi la teste</a>
+    </section>
+  </main>
+
+  <div id="toast" class="toast" role="status" aria-live="polite" hidden></div>
+
+  <script src="data/question-bank.js"></script>
+  <script src="data/flashcard-bank.js"></script>
+  <script src="file-store.js"></script>
+  <script src="app-core.js"></script>
+  <script src="flashcards.js"></script>
+</body>
+</html>

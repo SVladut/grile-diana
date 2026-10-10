@@ -1,0 +1,173 @@
+<!DOCTYPE html>
+<html lang="ro">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <meta name="theme-color" content="#0b3a57" />
+  <title>Materiale de studiu — Grile Diana</title>
+  <link rel="icon" type="image/png" href="assets/grile-diana-icon.png" />
+  <link rel="stylesheet" href="materiale.css" />
+</head>
+<body>
+  <header class="app-header">
+    <a class="brand" href="selectare.html" aria-label="Grile Diana — pagina principală">
+      <span class="brand-mark" aria-hidden="true">D</span>
+      <span class="brand-copy"><strong>Grile Diana</strong><small>Rezidențiat Stomatologie</small></span>
+    </a>
+    <nav class="header-links" aria-label="Navigare principală">
+      <a href="selectare.html">Teste</a>
+      <a href="flashcards.html">Flashcarduri</a>
+      <a href="materiale.html" aria-current="page">Notițe</a>
+      <a href="profil.html">Profilul Dianei</a>
+    </nav>
+  </header>
+
+  <main class="page-shell">
+    <section class="hero" aria-labelledby="pageTitle">
+      <div class="hero-copy">
+        <span class="eyebrow">Biblioteca de materiale</span>
+        <h1 id="pageTitle">Înțelege ideea. Apoi recupereaz-o din memorie.</h1>
+        <p>Notițele sunt împărțite exact pe materia de rezidențiat. Citește fiecare secțiune și fixează imediat termenii-cheie prin completări.</p>
+        <div class="hero-stats" aria-label="Conținut disponibil">
+          <span><strong id="heroChapterCount">7</strong> capitole</span>
+          <span><strong id="heroSubchapterCount">72</strong> subcapitole</span>
+          <span><strong id="heroSectionCount">1.951</strong> secțiuni</span>
+          <span><strong id="heroClozeCount">14.085</strong> completări dinamice</span>
+        </div>
+      </div>
+      <aside class="hero-progress" aria-label="Progresul materialelor">
+        <div class="progress-orb"><strong id="overallCoverage">0%</strong><span>parcurs</span></div>
+        <div class="hero-progress-copy">
+          <strong id="overallCompleted">0 din 1.951 secțiuni</strong>
+          <span id="overallAccuracy">Acuratețe completări: —</span>
+          <div class="progress-track" aria-hidden="true"><i id="overallProgressBar"></i></div>
+        </div>
+      </aside>
+    </section>
+
+    <section id="libraryView" class="view-panel" aria-labelledby="libraryTitle">
+      <div class="section-heading">
+        <div>
+          <span class="eyebrow">Cuprins inteligent</span>
+          <h2 id="libraryTitle">Alege un subcapitol</h2>
+          <p>Vezi progresul pe fiecare capitol, continuă lectura sau pornește direct un test complet.</p>
+        </div>
+        <label class="search-field">
+          <span class="sr-only">Caută în materiale</span>
+          <input id="materialSearch" type="search" autocomplete="off" placeholder="Caută un subcapitol…" />
+        </label>
+      </div>
+      <p id="libraryResultCount" class="result-count" aria-live="polite"></p>
+      <div id="chapterList" class="chapter-list"></div>
+      <div class="library-actions">
+        <p>Progresul este salvat automat în profil și inclus în backup.</p>
+        <button id="resetNotesProgress" type="button" class="danger-button">Resetează progresul materialelor</button>
+      </div>
+    </section>
+
+    <section id="readerView" class="view-panel" hidden aria-labelledby="readerTitle">
+      <div class="reader-toolbar">
+        <button id="backToLibrary" type="button" class="back-button"><span aria-hidden="true">←</span> Toate materialele</button>
+        <div class="reader-actions">
+          <label class="search-field compact">
+            <span class="sr-only">Caută în subcapitol</span>
+            <input id="sectionSearch" type="search" autocomplete="off" placeholder="Caută în secțiuni…" />
+          </label>
+          <button id="startSubchapterTest" type="button" class="primary-button">Test complet pe subcapitol</button>
+        </div>
+      </div>
+
+      <header class="reader-heading">
+        <div>
+          <span id="readerChapter" class="eyebrow">Capitol</span>
+          <h1 id="readerTitle">Subcapitol</h1>
+          <p id="readerSummary"></p>
+        </div>
+        <div class="reader-progress-card">
+          <strong id="readerProgress">0%</strong>
+          <span id="readerProgressText">0 secțiuni parcurse</span>
+          <div class="progress-track"><i id="readerProgressBar"></i></div>
+        </div>
+      </header>
+
+      <div class="reader-layout">
+        <aside class="section-nav" aria-label="Secțiunile subcapitolului">
+          <div class="section-nav-heading"><strong>În această lecție</strong><span id="visibleSectionCount"></span></div>
+          <nav id="sectionNavigator"></nav>
+        </aside>
+        <div id="sectionList" class="section-list"></div>
+      </div>
+      <div id="sectionEmpty" class="empty-state" hidden>
+        <strong>Nicio secțiune nu corespunde căutării.</strong>
+        <p>Încearcă un termen mai scurt sau șterge filtrul.</p>
+      </div>
+    </section>
+
+    <section id="testView" class="view-panel test-view" hidden aria-labelledby="testTitle">
+      <div class="test-topbar">
+        <button id="exitTest" type="button" class="back-button"><span aria-hidden="true">←</span> Ieși din test</button>
+        <div class="test-progress-copy"><strong id="testProgressLabel">1 din 1</strong><span id="testScoreLabel">0 corecte</span></div>
+      </div>
+      <div class="progress-track test-track"><i id="testProgressBar"></i></div>
+
+      <article class="cloze-card">
+        <div class="cloze-meta">
+          <span id="testSubchapter">Subcapitol</span>
+          <span id="testPages" class="page-pill"></span>
+        </div>
+        <span class="eyebrow">Completează spațiile</span>
+        <h1 id="testTitle">Secțiune</h1>
+        <form id="clozeForm" class="cloze-form" novalidate>
+          <div id="clozePrompt" class="note-content recall-content"></div>
+          <fieldset id="wordBankPanel" class="word-bank-panel">
+            <legend>Selectează termenii potriviți</legend>
+            <div id="wordBank" class="word-bank"></div>
+            <p>Apasă mai întâi pe un spațiu, apoi pe termenul ales. Poți și să scrii direct.</p>
+          </fieldset>
+          <button id="checkAnswer" type="submit" class="primary-button verify-button" disabled>Verifică toate răspunsurile</button>
+          <p id="clozeWarning" class="form-message" role="alert" hidden></p>
+        </form>
+        <div id="clozeFeedback" class="cloze-feedback" hidden aria-live="polite">
+          <strong id="feedbackTitle"></strong>
+          <p id="feedbackAnswer"></p>
+          <div id="feedbackSentence" class="feedback-sentence feedback-answer-list"></div>
+        </div>
+        <button id="nextCloze" type="button" class="next-button" hidden>Următoarea secțiune <span aria-hidden="true">→</span></button>
+      </article>
+      <aside class="test-tip"><strong>Active recall</strong><span>Scrie răspunsul înainte să verifici. Diacriticele și majusculele nu influențează corectarea.</span></aside>
+    </section>
+
+    <section id="resultView" class="view-panel result-view" hidden aria-labelledby="resultTitle">
+      <span id="resultIcon" class="result-icon" aria-hidden="true">✓</span>
+      <span class="eyebrow">Test de completare finalizat</span>
+      <h1 id="resultTitle">Rezultatul tău</h1>
+      <p id="resultSummary"></p>
+      <div class="result-metrics">
+        <div><span>Corecte</span><strong id="resultCorrect">0 / 0</strong></div>
+        <div><span>Procentaj</span><strong id="resultPercentage">0%</strong></div>
+        <div><span>Secțiuni testate</span><strong id="resultSections">0</strong></div>
+      </div>
+      <div class="result-actions">
+        <button id="repeatWrong" type="button" class="primary-button">Repetă completările greșite</button>
+        <button id="returnToReader" type="button" class="outline-button">Înapoi la material</button>
+        <button id="returnToLibrary" type="button" class="outline-button">Toate subcapitolele</button>
+      </div>
+    </section>
+
+    <section id="errorView" class="view-panel empty-state" hidden>
+      <strong>Materialele nu au putut fi încărcate.</strong>
+      <p id="errorMessage"></p>
+      <a href="selectare.html">Înapoi la teste</a>
+    </section>
+  </main>
+
+  <div id="toast" class="toast" role="status" aria-live="polite" hidden></div>
+
+  <script src="data/question-bank.js"></script>
+  <script src="data/flashcard-bank.js"></script>
+  <script src="data/notes-bank.js"></script>
+  <script src="file-store.js"></script>
+  <script src="app-core.js"></script>
+  <script src="materiale.js"></script>
+</body>
+</html>
