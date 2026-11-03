@@ -778,6 +778,9 @@
 
   function showActionMessage(message, isError = false) {
     if (actionMessageTimer) global.clearTimeout(actionMessageTimer);
+    if (elements.actionMessage.parentElement !== document.body) {
+      document.body.append(elements.actionMessage);
+    }
     elements.actionMessage.textContent = message;
     elements.actionMessage.hidden = false;
     if (isError) {
