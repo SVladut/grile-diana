@@ -505,6 +505,12 @@
     return "wrong";
   }
 
+  async function loadQuestionDetails(questionIds) {
+    const loadedQuestions = await app.loadQuestionIds(questionIds);
+    loadedQuestions.forEach(question => questionById.set(String(question.id), question));
+    return loadedQuestions;
+  }
+
   async function openHistoryReview(entry) {
     const questionHistory = Array.isArray(entry.questions) ? entry.questions : [];
     if (!questionHistory.length) {
@@ -517,7 +523,7 @@
       .map(detail => String(detail.questionId))
       .filter(questionId => questionById.has(questionId));
     try {
-      await app.loadQuestionIds(questionsToLoad);
+      await loadQuestionDetails(questionsToLoad);
     } catch (error) {
       showActionMessage(`Întrebările istoricului nu au putut fi încărcate: ${error.message}`, true);
       return;
@@ -926,7 +932,7 @@
 
     questionDetailsLoadPromise = (async () => {
       try {
-        await app.loadQuestionIds(questionIds);
+        await loadQuestionDetails(questionIds);
         questionRows = buildQuestionRows();
         renderQuestions();
       } catch (error) {
