@@ -245,11 +245,12 @@ Consecință: două înregistrări cu ID-uri diferite, dar același `fingerprint
 
 1. se elimină ID-urile de subcapitol duplicate și necunoscute;
 2. trebuie să rămână cel puțin un subcapitol valid;
-3. se filtrează banca după subcapitolele selectate;
+3. se filtrează banca după subcapitolele selectate și, opțional, după tipul întrebării (CS, CM sau ambele);
 4. rezultatul este amestecat și deduplicat după `fingerprint`;
 5. numărul cerut trebuie să fie întreg și cel puțin 1;
 6. numărul cerut nu poate depăși numărul de întrebări unice disponibile;
-7. se iau primele `requestedCount` întrebări.
+7. se iau primele `requestedCount` întrebări. Opțiunea implicită combină aleatoriu CS și CM;
+8. filtrul de tip este disponibil numai pentru testul personalizat; simularea păstrează structura fixă de 50 CS și 150 CM.
 
 ### 6.3. Simulare (`exam`)
 

@@ -13,6 +13,7 @@
 
   const ready = Promise.resolve(fileStore.ready);
   const OPTION_IDS = ["A", "B", "C", "D", "E"];
+  const PRACTICE_QUESTION_TYPES = new Set(["all", "CS", "CM"]);
   const flashcardBank = global.FLASHCARD_BANK || {
     version: 1,
     metadata: { cardCount: 0, deckCount: 0, chapterCount: 0 },
@@ -217,9 +218,15 @@
     });
   }
 
-  function availableQuestionsForSubchapters(subchapterIds) {
+  function availableQuestionsForSubchapters(subchapterIds, questionType = "all") {
+    if (!PRACTICE_QUESTION_TYPES.has(questionType)) {
+      throw new Error("Tipul întrebărilor trebuie să fie CS, CM sau toate tipurile.");
+    }
     const requested = new Set(subchapterIds);
-    return uniqueQuestions(bank.questions.filter(question => requested.has(question.subchapterId)));
+    return uniqueQuestions(bank.questions.filter(question => (
+      requested.has(question.subchapterId)
+      && (questionType === "all" || question.type === questionType)
+    )));
   }
 
   function createId() {
@@ -256,11 +263,11 @@
     };
   }
 
-  function createPracticeSession(subchapterIds, requestedCount) {
+  function createPracticeSession(subchapterIds, requestedCount, questionType = "all") {
     const selected = [...new Set(subchapterIds)].filter(id => subchapterById.has(id));
     if (!selected.length) throw new Error("Selectează cel puțin un subcapitol.");
 
-    const available = availableQuestionsForSubchapters(selected);
+    const available = availableQuestionsForSubchapters(selected, questionType);
     const count = Number(requestedCount);
     if (!Number.isInteger(count) || count < 1) {
       throw new Error("Numărul de întrebări trebuie să fie un număr întreg pozitiv.");

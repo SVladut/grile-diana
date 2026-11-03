@@ -191,6 +191,7 @@ document.addEventListener("DOMContentLoaded", async () => {
   const selectedCount = document.getElementById("selectedCount");
   const selectedSummary = document.getElementById("selectedSummary");
   const numberInput = document.getElementById("numarIntrebari");
+  const questionTypeFilter = document.getElementById("questionTypeFilter");
   const questionCountHint = document.getElementById("questionCountHint");
   const formMessage = document.getElementById("formMessage");
   const resumeBanner = document.getElementById("resumeBanner");
@@ -304,21 +305,24 @@ document.addEventListener("DOMContentLoaded", async () => {
 
   function uniqueAvailableCount(subchapterIds) {
     if (!subchapterIds.length) return 0;
-    return app.availableQuestionsForSubchapters(subchapterIds).length;
+    return app.availableQuestionsForSubchapters(subchapterIds, questionTypeFilter.value).length;
   }
 
   function updateSelectionState() {
     const selectedIds = selectedSubchapterIds();
     const available = uniqueAvailableCount(selectedIds);
+    const typeLabel = questionTypeFilter.selectedOptions[0].textContent.toLowerCase();
     selectedCount.textContent = String(selectedIds.length);
     selectedSummary.textContent = selectedIds.length
-      ? `${available.toLocaleString("ro-RO")} grile unice disponibile`
+      ? `${available.toLocaleString("ro-RO")} grile unice ${available === 1 ? "disponibilă" : "disponibile"}`
       : "subcapitole selectate";
 
     const effectiveMax = Math.max(1, available);
     numberInput.max = String(effectiveMax);
     questionCountHint.textContent = selectedIds.length
-      ? `Poți genera între 1 și ${available.toLocaleString("ro-RO")} întrebări.`
+      ? available
+        ? `Poți genera între 1 și ${available.toLocaleString("ro-RO")} întrebări ${typeLabel}.`
+        : `Nu există întrebări ${typeLabel} în subcapitolele selectate.`
       : "Selectează subcapitolele pentru a vedea numărul maxim de întrebări.";
     if (available && Number(numberInput.value) > effectiveMax) {
       numberInput.value = String(effectiveMax);
@@ -385,6 +389,7 @@ document.addEventListener("DOMContentLoaded", async () => {
   }
 
   chapterCheckboxes.forEach(checkbox => checkbox.addEventListener("change", updateSelectionState));
+  questionTypeFilter.addEventListener("change", updateSelectionState);
 
   document.querySelectorAll(".toggle-subcapitole, .toggle-collection").forEach(button => {
     const targetId = button.dataset.target;
@@ -438,7 +443,11 @@ document.addEventListener("DOMContentLoaded", async () => {
     if (!confirmSessionReplacement()) return;
 
     try {
-      const session = app.createPracticeSession(selectedSubchapterIds(), Number(numberInput.value));
+      const session = app.createPracticeSession(
+        selectedSubchapterIds(),
+        Number(numberInput.value),
+        questionTypeFilter.value
+      );
       await startSession(session);
     } catch (error) {
       showFormMessage(error.message);
