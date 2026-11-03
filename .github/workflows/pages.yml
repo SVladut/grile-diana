@@ -25,6 +25,7 @@ jobs:
           cp *.html *.css *.js _site/
           cp assets/grile-diana-icon.png _site/assets/
           cp data/*.js _site/data/
+          cp -R data/question-shards _site/data/
           touch _site/.nojekyll
 
       - name: Upload website artifact
