@@ -1057,6 +1057,8 @@
         questionId: question.id,
         fingerprint: question.fingerprint,
         type: question.type,
+        text: question.text,
+        options: question.options.map(option => ({ ...option })),
         chapterId: question.chapterId,
         subchapterId: question.subchapterId,
         correct: [...question.correct],
@@ -1393,6 +1395,149 @@
     return cloneSerializable(rawNotes);
   }
 
+  function mergeByTimestamp(currentRecords, importedRecords, getTimestamp) {
+    const merged = { ...importedRecords, ...currentRecords };
+    Object.entries(importedRecords).forEach(([id, importedRecord]) => {
+      const currentRecord = currentRecords[id];
+      if (!currentRecord || getTimestamp(importedRecord) > getTimestamp(currentRecord)) {
+        merged[id] = importedRecord;
+      }
+    });
+    return merged;
+  }
+
+  function mergeProgress(current, imported) {
+    return {
+      version: 1,
+      updatedAt: Math.max(current.updatedAt || 0, imported.updatedAt || 0) || null,
+      questions: mergeByTimestamp(
+        current.questions,
+        imported.questions,
+        record => record.lastAnsweredAt || 0
+      )
+    };
+  }
+
+  function mergeMistakes(current, imported) {
+    return {
+      version: 1,
+      updatedAt: Math.max(current.updatedAt || 0, imported.updatedAt || 0) || null,
+      questions: mergeByTimestamp(
+        current.questions,
+        imported.questions,
+        record => Math.max(record.lastWrongAt || 0, record.resolvedAt || 0)
+      )
+    };
+  }
+
+  function mergeFlashcards(current, imported) {
+    const currentSession = current.session;
+    const importedSession = imported.session;
+    const session = !currentSession
+      ? importedSession
+      : !importedSession
+        ? currentSession
+        : (importedSession.updatedAt || 0) > (currentSession.updatedAt || 0)
+          ? importedSession
+          : currentSession;
+    return {
+      version: 1,
+      updatedAt: Math.max(current.updatedAt || 0, imported.updatedAt || 0) || null,
+      ratings: mergeByTimestamp(
+        current.ratings,
+        imported.ratings,
+        record => record.lastReviewedAt || 0
+      ),
+      session
+    };
+  }
+
+  function mergeNoteRecords(currentRecords, importedRecords, counterFields, supportsViews) {
+    const merged = {};
+    const ids = new Set([...Object.keys(currentRecords), ...Object.keys(importedRecords)]);
+    ids.forEach(id => {
+      const current = currentRecords[id];
+      const imported = importedRecords[id];
+      if (!current) {
+        merged[id] = imported;
+        return;
+      }
+      if (!imported) {
+        merged[id] = current;
+        return;
+      }
+
+      const latest = (imported.lastTestedAt || 0) > (current.lastTestedAt || 0) ? imported : current;
+      const record = {
+        ...latest,
+        bestPercentage: Math.max(current.bestPercentage || 0, imported.bestPercentage || 0),
+        lastTestedAt: Math.max(current.lastTestedAt || 0, imported.lastTestedAt || 0) || null
+      };
+      counterFields.forEach(field => {
+        record[field] = Math.max(current[field] || 0, imported[field] || 0);
+      });
+      if (supportsViews) {
+        record.viewCount = Math.max(current.viewCount || 0, imported.viewCount || 0);
+        const firstViewedAt = [current.firstViewedAt, imported.firstViewedAt]
+          .filter(Number.isFinite);
+        record.firstViewedAt = firstViewedAt.length ? Math.min(...firstViewedAt) : null;
+        record.lastViewedAt = Math.max(current.lastViewedAt || 0, imported.lastViewedAt || 0) || null;
+        record.completedAt = Math.max(current.completedAt || 0, imported.completedAt || 0) || null;
+      }
+      merged[id] = record;
+    });
+    return merged;
+  }
+
+  function mergeNotes(current, imported) {
+    return {
+      version: 1,
+      updatedAt: Math.max(current.updatedAt || 0, imported.updatedAt || 0) || null,
+      testRuns: Math.max(current.testRuns, imported.testRuns),
+      sections: mergeNoteRecords(
+        current.sections,
+        imported.sections,
+        ["testAttempts", "correctAnswers", "totalAnswers"],
+        true
+      ),
+      subchapters: mergeNoteRecords(
+        current.subchapters,
+        imported.subchapters,
+        ["testAttempts", "correctAnswers", "totalAnswers"],
+        false
+      )
+    };
+  }
+
+  function mergeHistory(current, imported) {
+    const merged = new Map(imported.map(entry => [entry.id, entry]));
+    current.forEach(entry => {
+      const importedEntry = merged.get(entry.id);
+      if (!importedEntry
+        || (entry.completedAt || 0) > (importedEntry.completedAt || 0)
+        || (entry.completedAt === importedEntry.completedAt
+          && historyEntryDetailCount(entry) > historyEntryDetailCount(importedEntry))) {
+        merged.set(entry.id, entry);
+      }
+    });
+    return [...merged.values()].sort((left, right) => (right.completedAt || 0) - (left.completedAt || 0));
+  }
+
+  function historyEntryDetailCount(entry) {
+    const questions = Array.isArray(entry.questions) ? entry.questions : [];
+    return questions.reduce((total, question) => (
+      total
+      + (question.text ? 1 : 0)
+      + (Array.isArray(question.options) && question.options.length ? 1 : 0)
+    ), 0);
+  }
+
+  function mergeSessions(current, imported) {
+    if (!current) return imported;
+    if (!imported) return current;
+    return (imported.updatedAt || 0) > (current.updatedAt || 0) ? imported : current;
+  }
+
   function parseProfileBackup(rawBackup) {
     let backup = rawBackup;
     if (typeof rawBackup === "string") {
@@ -1405,14 +1550,17 @@
     if (!isPlainObject(backup) || backup.schema !== "grile-diana-profile") {
       throw new Error("Fișierul selectat nu este un backup Grile Diana.");
     }
-    if (![1, 2, 3, 4].includes(backup.version)) {
+    if (![1, 2, 3, 4, 5].includes(backup.version)) {
       throw new Error(`Versiunea backupului (${backup.version ?? "necunoscută"}) nu este compatibilă.`);
     }
     return backup;
   }
 
-  async function restoreProfileBackup(rawBackup) {
+  async function restoreProfileBackup(rawBackup, strategy = "replace") {
     await ready;
+    if (strategy !== "replace" && strategy !== "merge") {
+      throw new Error("Alege dacă backupul trebuie îmbinat sau să înlocuiască datele curente.");
+    }
     const backup = parseProfileBackup(rawBackup);
     const progress = validateImportedProgress(backup.progress);
     const mistakes = validateImportedMistakes(backup.mistakes, progress, backup.version);
@@ -1421,25 +1569,33 @@
     const history = validateImportedHistory(backup.history);
     const session = validateImportedSession(backup.session ?? null);
     const state = readState();
-
-    state.progress = progress;
-    state.mistakes = mistakes;
-    state.flashcards = flashcards;
-    state.notes = notes;
-    state.history = history;
-    state.session = session;
+    if (strategy === "merge") {
+      state.progress = mergeProgress(state.progress, progress);
+      state.mistakes = mergeMistakes(state.mistakes, mistakes);
+      state.flashcards = mergeFlashcards(state.flashcards, flashcards);
+      state.notes = mergeNotes(state.notes, notes);
+      state.history = mergeHistory(state.history, history);
+      state.session = mergeSessions(state.session, session);
+    } else {
+      state.progress = progress;
+      state.mistakes = mistakes;
+      state.flashcards = flashcards;
+      state.notes = notes;
+      state.history = history;
+      state.session = session;
+    }
     await persistState(state);
 
     return {
-      progressCount: Object.keys(progress.questions).length,
-      activeMistakes: Object.values(mistakes.questions).filter(record => record?.status === "active").length,
-      flashcardStudied: Object.keys(flashcards.ratings).length,
-      flashcardReviews: Object.values(flashcards.ratings).reduce((sum, record) => sum + (record.reviews || 0), 0),
-      noteSectionsStudied: Object.values(notes.sections).filter(record => (record?.viewCount || 0) > 0).length,
-      noteSectionsCompleted: Object.values(notes.sections).filter(record => Number.isFinite(record?.completedAt)).length,
-      noteTestRuns: notes.testRuns,
-      historyCount: history.length,
-      hasSession: Boolean(session)
+      progressCount: Object.keys(state.progress.questions).length,
+      activeMistakes: Object.values(state.mistakes.questions).filter(record => record?.status === "active").length,
+      flashcardStudied: Object.keys(state.flashcards.ratings).length,
+      flashcardReviews: Object.values(state.flashcards.ratings).reduce((sum, record) => sum + (record.reviews || 0), 0),
+      noteSectionsStudied: Object.values(state.notes.sections).filter(record => (record?.viewCount || 0) > 0).length,
+      noteSectionsCompleted: Object.values(state.notes.sections).filter(record => Number.isFinite(record?.completedAt)).length,
+      noteTestRuns: state.notes.testRuns,
+      historyCount: state.history.length,
+      hasSession: Boolean(state.session)
     };
   }
 
@@ -1451,7 +1607,7 @@
       mimeType: "application/json;charset=utf-8",
       contents: JSON.stringify({
         schema: "grile-diana-profile",
-        version: 4,
+        version: 5,
         exportedAt,
         bankVersion: bank.version || bank.metadata?.generatedAt || null,
         flashcardBankVersion: flashcardBank.version || null,

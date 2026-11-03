@@ -344,6 +344,16 @@ La final:
 - rezultatul complet este recalculat;
 - intrarea de istoric este inserată sau înlocuită după ID-ul sesiunii;
 - istoricul este sortat descrescător după `completedAt`.
+- fiecare întrebare din istoricul nou păstrează și enunțul și variantele, împreună cu selecția utilizatorului, răspunsul corect și punctajul;
+- profilul permite deschiderea detaliilor unui test finalizat într-o fereastră de revizuire, cu enunțul și răspunsurile în zona principală și o matrice laterală de navigare colorată după rezultat (verde corect, galben parțial, roșu greșit, gri fără răspuns);
+- revizuirea funcționează și pentru istoricul vechi prin identificatorii întrebărilor încă existenți în banca curentă.
+
+Importul unui backup oferă două opțiuni explicite:
+
+- **Îmbină datele**: unește progresul, greșelile, flashcardurile, notițele, istoricul și sesiunea; ID-urile noi se adaugă, iar înregistrările suprapuse aleg versiunea cu timestamp mai nouă (la egalitate se păstrează cea curentă). Contoarele cumulative din notițe folosesc valoarea maximă pentru a evita dublarea datelor din backupuri suprapuse.
+- **Înlocuiește tot**: comportamentul anterior, cu datele din backup în locul datelor curente.
+
+Backupurile existente, inclusiv versiunile 1–4, rămân importabile.
 
 ## 8. Progresul permanent și lista de greșeli
 

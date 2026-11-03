@@ -68,6 +68,15 @@
 
     <div id="dataWarning" class="data-warning" role="alert" hidden></div>
     <div id="actionMessage" class="action-message" role="status" aria-live="polite" hidden></div>
+    <dialog id="importModeDialog" class="import-mode-dialog" aria-labelledby="importModeTitle">
+      <h2 id="importModeTitle">Cum vrei să imporți backupul?</h2>
+      <p>Îmbinarea adaugă datele backupului peste progresul existent. Înlocuirea șterge datele curente care nu apar în backup.</p>
+      <div class="import-mode-actions">
+        <button type="button" class="export-button" data-import-choice="cancel">Anulează</button>
+        <button type="button" class="export-button import-button" data-import-choice="merge">Îmbină datele</button>
+        <button type="button" class="export-button replace-button" data-import-choice="replace">Înlocuiește tot</button>
+      </div>
+    </dialog>
 
     <section class="overview-section" aria-labelledby="overview-title">
       <div class="section-heading">
@@ -292,6 +301,7 @@
               <th scope="col">Corecte</th>
               <th scope="col">Punctaj</th>
               <th scope="col">Notă</th>
+              <th scope="col">Detalii</th>
             </tr>
           </thead>
           <tbody id="historyTableBody"></tbody>
@@ -305,6 +315,30 @@
       </div>
       <p id="historyCount" class="result-count" aria-live="polite"></p>
     </section>
+
+    <dialog id="historyReviewDialog" class="history-review-dialog" aria-labelledby="historyReviewTitle">
+      <header class="history-review-header">
+        <div>
+          <span class="eyebrow">Revizuire test</span>
+          <h2 id="historyReviewTitle">Întrebările testului</h2>
+          <p id="historyReviewPosition" aria-live="polite"></p>
+        </div>
+        <button id="historyReviewClose" class="history-review-close" type="button" aria-label="Închide revizuirea">×</button>
+      </header>
+      <div class="history-review-layout">
+        <main id="historyReviewContent" class="history-review-content"></main>
+        <aside class="history-review-sidebar" aria-label="Navigare între întrebări">
+          <h3>Întrebările testului</h3>
+          <div class="history-review-legend">
+            <span class="legend-correct">Corect</span>
+            <span class="legend-partial">Parțial</span>
+            <span class="legend-wrong">Greșit</span>
+            <span class="legend-unanswered">Fără răspuns</span>
+          </div>
+          <nav id="historyQuestionMatrix" class="history-question-matrix" aria-label="Alege întrebarea"></nav>
+        </aside>
+      </div>
+    </dialog>
 
     <section class="content-section questions-section" aria-labelledby="questions-title">
       <div class="section-heading">

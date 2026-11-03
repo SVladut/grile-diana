@@ -26,6 +26,7 @@
     exportBackupBtn: document.getElementById("exportBackupBtn"),
     importBackupBtn: document.getElementById("importBackupBtn"),
     importBackupInput: document.getElementById("importBackupInput"),
+    importModeDialog: document.getElementById("importModeDialog"),
     resetProgressBtn: document.getElementById("resetProgressBtn"),
     lastUpdateText: document.getElementById("lastUpdateText"),
     overviewSummary: document.getElementById("overviewSummary"),
@@ -67,6 +68,12 @@
     historyTableBody: document.getElementById("historyTableBody"),
     historyEmpty: document.getElementById("historyEmpty"),
     historyCount: document.getElementById("historyCount"),
+    historyReviewDialog: document.getElementById("historyReviewDialog"),
+    historyReviewTitle: document.getElementById("historyReviewTitle"),
+    historyReviewPosition: document.getElementById("historyReviewPosition"),
+    historyReviewContent: document.getElementById("historyReviewContent"),
+    historyQuestionMatrix: document.getElementById("historyQuestionMatrix"),
+    historyReviewClose: document.getElementById("historyReviewClose"),
     questionSearch: document.getElementById("questionSearch"),
     statusFilter: document.getElementById("statusFilter"),
     chapterFilter: document.getElementById("chapterFilter"),
@@ -99,6 +106,7 @@
   let actionMessageTimer = null;
   let currentPage = 1;
   let app = null;
+  let resolveImportChoice = null;
   let storedProgress = { version: 1, updatedAt: null, questions: {} };
   let storedSession = null;
   let storedFlashcards = { version: 1, updatedAt: null, ratings: {}, session: null };
@@ -108,6 +116,8 @@
   let progressQuestions = {};
   let history = [];
   let questionRows = [];
+  let activeHistoryReview = null;
+  let activeHistoryQuestionIndex = 0;
 
   function finiteNumber(value, fallback = 0) {
     const number = Number(value);
@@ -407,7 +417,7 @@
     elements.historyEmpty.hidden = filtered.length !== 0;
     elements.historyTableBody.parentElement.hidden = filtered.length === 0;
 
-    filtered.forEach(entry => {
+    filtered.forEach((entry, entryIndex) => {
       const row = document.createElement("tr");
       const date = validTimestamp(entry.completedAt) || validTimestamp(entry.createdAt);
       appendCell(row, "Data", formatDate(date), "date-cell");
@@ -452,7 +462,19 @@
       gradeWrapper.append(gradeStrong);
       appendCell(row, "Notă", gradeWrapper);
 
+      const detailsButton = document.createElement("button");
+      detailsButton.type = "button";
+      detailsButton.className = "history-details-toggle";
+      detailsButton.textContent = "Vezi întrebările";
+      detailsButton.setAttribute("aria-expanded", "false");
+      detailsButton.setAttribute("aria-haspopup", "dialog");
+      appendCell(row, "Detalii", detailsButton, "history-details-cell");
+
       elements.historyTableBody.append(row);
+
+      detailsButton.addEventListener("click", () => {
+        openHistoryReview(entry);
+      });
     });
 
     if (!history.length) {
@@ -462,6 +484,131 @@
     } else {
       elements.historyCount.textContent = `${formatNumber(filtered.length)} din ${formatNumber(history.length)} teste afișate`;
     }
+  }
+
+  function getHistoryQuestionStatus(detail) {
+    if (!detail.answered) return "unanswered";
+    if (detail.fullyCorrect) return "correct";
+    if (Number(detail.score) > 0) return "partial";
+    return "wrong";
+  }
+
+  function openHistoryReview(entry) {
+    const questionHistory = Array.isArray(entry.questions) ? entry.questions : [];
+    if (!questionHistory.length) {
+      showActionMessage("Acest test nu are întrebările salvate în istoricul original.", true);
+      return;
+    }
+
+    activeHistoryReview = entry;
+    activeHistoryQuestionIndex = 0;
+    elements.historyReviewTitle.textContent = entry.mode === "exam"
+      ? "Revizuire simulare examen"
+      : entry.mode === "mistakes" ? "Revizuire test din greșeli" : "Revizuire test personalizat";
+    renderHistoryQuestionMatrix();
+    renderHistoryReview();
+    elements.historyReviewDialog.showModal();
+  }
+
+  function renderHistoryReview() {
+    if (!activeHistoryReview) return;
+    const questionHistory = activeHistoryReview.questions;
+    const detail = questionHistory[activeHistoryQuestionIndex];
+    const questionNumber = Number.isInteger(detail.position) ? detail.position : activeHistoryQuestionIndex + 1;
+    elements.historyReviewPosition.textContent = `Întrebarea ${questionNumber} din ${questionHistory.length}`;
+    elements.historyReviewContent.replaceChildren(createHistoryQuestion(detail, questionNumber));
+  }
+
+  function renderHistoryQuestionMatrix() {
+    const questionHistory = activeHistoryReview.questions;
+    elements.historyQuestionMatrix.replaceChildren();
+    questionHistory.forEach((questionDetail, index) => {
+      const number = Number.isInteger(questionDetail.position) ? questionDetail.position : index + 1;
+      const status = getHistoryQuestionStatus(questionDetail);
+      const button = document.createElement("button");
+      button.type = "button";
+      button.className = `history-question-number is-${status}${index === activeHistoryQuestionIndex ? " is-active" : ""}`;
+      button.textContent = String(number);
+      button.dataset.questionIndex = String(index);
+      button.setAttribute("aria-label", `Întrebarea ${number}: ${status === "correct" ? "corectă" : status === "partial" ? "parțial corectă" : status === "wrong" ? "greșită" : "fără răspuns"}`);
+      button.setAttribute("aria-current", String(index === activeHistoryQuestionIndex));
+      button.addEventListener("click", () => {
+        elements.historyQuestionMatrix.querySelector('[aria-current="true"]')?.setAttribute("aria-current", "false");
+        elements.historyQuestionMatrix.querySelector(".is-active")?.classList.remove("is-active");
+        activeHistoryQuestionIndex = index;
+        button.classList.add("is-active");
+        button.setAttribute("aria-current", "true");
+        renderHistoryReview();
+      });
+      elements.historyQuestionMatrix.append(button);
+    });
+  }
+
+  function createHistoryQuestion(detail, questionNumber) {
+    const question = questionById.get(String(detail.questionId));
+    const questionOptions = Array.isArray(detail.options) && detail.options.length
+      ? detail.options
+      : question?.options || [];
+    const correct = Array.isArray(detail.correct) ? detail.correct : question?.correct || [];
+    const selection = Array.isArray(detail.selection) ? detail.selection : [];
+    const card = document.createElement("article");
+    card.className = `history-question-card is-${getHistoryQuestionStatus(detail)}`;
+
+    const metadata = document.createElement("div");
+    metadata.className = "history-question-meta";
+    const chapter = chapterById.get(String(detail.chapterId || question?.chapterId || ""));
+    const subchapter = subchapterById.get(String(detail.subchapterId || question?.subchapterId || ""));
+    const location = chapter && subchapter
+      ? `Cap. ${chapter.code} · ${subchapter.id} ${subchapter.title}`
+      : `Întrebarea ${detail.questionId}`;
+    const status = getHistoryQuestionStatus(detail);
+    const statusLabel = status === "correct" ? "Corect" : status === "partial" ? "Parțial corect" : status === "wrong" ? "Greșit" : "Fără răspuns";
+    metadata.textContent = `${detail.type || question?.type || "Grilă"} · ${location} · ${statusLabel} · ${formatDecimal(detail.score)} / ${formatDecimal(detail.maxScore)} puncte`;
+
+    const text = document.createElement("p");
+    text.className = "history-question-text";
+    text.textContent = detail.text || question?.text || `Enunț indisponibil pentru întrebarea ${detail.questionId}.`;
+    const number = document.createElement("h3");
+    number.className = "history-question-heading";
+    number.textContent = `Întrebarea ${questionNumber}`;
+    card.append(number, metadata, text);
+
+    if (!questionOptions.length) {
+      const answers = document.createElement("p");
+      answers.className = "history-details-empty";
+      answers.textContent = `Răspunsul tău: ${selection.join(", ") || "fără răspuns"} · Răspuns corect: ${correct.join(", ") || "indisponibil"}`;
+      card.append(answers);
+      return card;
+    }
+
+    const options = document.createElement("ul");
+    options.className = "history-answer-options";
+    questionOptions.forEach(option => {
+      const item = document.createElement("li");
+      const isSelected = selection.includes(option.id);
+      const isCorrect = correct.includes(option.id);
+      item.className = isCorrect ? "is-correct" : isSelected ? "is-wrong" : "";
+      const label = document.createElement("strong");
+      label.textContent = `${option.id}. `;
+      const answerText = document.createElement("span");
+      answerText.textContent = option.text || `Varianta ${option.id}`;
+      item.append(label, answerText);
+
+      const marker = document.createElement("small");
+      marker.textContent = isSelected
+        ? isCorrect ? "Răspunsul tău · corect" : "Răspunsul tău · greșit"
+        : isCorrect ? "Răspuns corect" : "";
+      if (marker.textContent) item.append(marker);
+      options.append(item);
+    });
+    if (!selection.length) {
+      const unanswered = document.createElement("li");
+      unanswered.className = "is-unanswered";
+      unanswered.textContent = "Nu ai selectat niciun răspuns.";
+      options.prepend(unanswered);
+    }
+    card.append(options);
+    return card;
   }
 
   function filteredQuestionRows() {
@@ -648,7 +795,7 @@
       download.click();
       download.remove();
       global.setTimeout(() => URL.revokeObjectURL(url), 1000);
-      showActionMessage("Backupul v4 a fost descărcat: include grilele, greșelile, flashcardurile, notițele și testele cu completări.");
+      showActionMessage("Backupul v5 a fost descărcat: include grilele, greșelile, flashcardurile, notițele și testele cu răspunsurile salvate.");
     } catch (error) {
       console.error("Backupul nu a putut fi exportat.", error);
       showActionMessage("Backupul nu a putut fi descărcat. Încearcă din nou.", true);
@@ -664,10 +811,8 @@
       return;
     }
 
-    const confirmed = global.confirm(
-      "Importul va înlocui progresul, lista de greșeli, flashcardurile, notițele, testele cu completări, istoricul și sesiunile curente cu datele din backup. Continui?"
-    );
-    if (!confirmed) {
+    const strategy = await chooseImportStrategy();
+    if (!strategy) {
       elements.importBackupInput.value = "";
       return;
     }
@@ -678,7 +823,7 @@
     elements.importBackupBtn.textContent = "Se importă…";
     try {
       if (!app?.restoreProfileBackup) throw new Error("Motorul de import nu este disponibil.");
-      const summary = await app.restoreProfileBackup(await file.text());
+      const summary = await app.restoreProfileBackup(await file.text(), strategy);
       refreshDataFromApp();
       renderAllData();
       const mistakeText = summary.activeMistakes === 1
@@ -691,7 +836,7 @@
       const noteSectionsCompleted = nonNegativeInteger(summary.noteSectionsCompleted);
       const noteTestRuns = nonNegativeInteger(summary.noteTestRuns);
       const notesText = `${formatNumber(noteSectionsStudied)} secțiuni de notițe parcurse, ${formatNumber(noteSectionsCompleted)} completate și ${formatNumber(noteTestRuns)} teste de notițe`;
-      showActionMessage(`Backup v4 importat cu succes: ${formatNumber(summary.progressCount)} întrebări, ${mistakeText}, ${flashcardText} și ${notesText}.`);
+      showActionMessage(`Backupul a fost ${strategy === "merge" ? "îmbinat" : "importat"} cu succes: ${formatNumber(summary.progressCount)} întrebări, ${mistakeText}, ${flashcardText} și ${notesText}.`);
     } catch (error) {
       console.error("Backupul nu a putut fi importat.", error);
       showActionMessage(error.message || "Backupul nu a putut fi importat.", true);
@@ -701,6 +846,22 @@
       elements.exportBackupBtn.disabled = false;
       elements.importBackupBtn.innerHTML = originalContents;
     }
+  }
+
+  function chooseImportStrategy() {
+    const dialog = elements.importModeDialog;
+    if (typeof dialog?.showModal !== "function") {
+      if (global.confirm("Îmbini backupul cu datele curente? Datele existente și cele din backup vor fi păstrate.")) {
+        return Promise.resolve("merge");
+      }
+      return Promise.resolve(global.confirm("Înlocuiești toate datele curente cu backupul? Această acțiune poate șterge progresul care nu este în backup.")
+        ? "replace"
+        : null);
+    }
+    return new Promise(resolve => {
+      resolveImportChoice = resolve;
+      dialog.showModal();
+    });
   }
 
   function refreshDataFromApp() {
@@ -764,9 +925,29 @@
     elements.exportBackupBtn.addEventListener("click", exportBackup);
     elements.importBackupBtn.addEventListener("click", () => elements.importBackupInput.click());
     elements.importBackupInput.addEventListener("change", importBackup);
+    elements.importModeDialog.addEventListener("click", event => {
+      const choice = event.target.closest("[data-import-choice]")?.dataset.importChoice;
+      if (choice) elements.importModeDialog.close(choice);
+    });
+    elements.importModeDialog.addEventListener("close", () => {
+      if (!resolveImportChoice) return;
+      const resolve = resolveImportChoice;
+      resolveImportChoice = null;
+      resolve(["merge", "replace"].includes(elements.importModeDialog.returnValue)
+        ? elements.importModeDialog.returnValue
+        : null);
+    });
     elements.resetProgressBtn.addEventListener("click", resetAllProgress);
     elements.historyModeFilter.addEventListener("change", renderHistory);
     elements.historySortFilter.addEventListener("change", renderHistory);
+    elements.historyReviewClose.addEventListener("click", () => elements.historyReviewDialog.close());
+    elements.historyReviewDialog.addEventListener("click", event => {
+      if (event.target === elements.historyReviewDialog) elements.historyReviewDialog.close();
+    });
+    elements.historyReviewDialog.addEventListener("close", () => {
+      activeHistoryReview = null;
+      activeHistoryQuestionIndex = 0;
+    });
     elements.questionSearch.addEventListener("input", () => {
       currentPage = 1;
       renderQuestions();
