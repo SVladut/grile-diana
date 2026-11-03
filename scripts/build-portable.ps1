@@ -83,9 +83,12 @@ foreach ($relativePath in $applicationFiles) {
 }
 
 Copy-Item -LiteralPath (Join-Path $projectRoot "assets\grile-diana-icon.png") -Destination (Join-Path $packageDirectory "assets\grile-diana-icon.png")
-Copy-Item -LiteralPath (Join-Path $projectRoot "data\question-bank.js") -Destination (Join-Path $packageDirectory "data\question-bank.js")
+Copy-Item -LiteralPath (Join-Path $projectRoot "data\question-index.js") -Destination (Join-Path $packageDirectory "data\question-index.js")
+Copy-Item -LiteralPath (Join-Path $projectRoot "data\question-shards") -Destination (Join-Path $packageDirectory "data\question-shards") -Recurse
 Copy-Item -LiteralPath (Join-Path $projectRoot "data\flashcard-bank.js") -Destination (Join-Path $packageDirectory "data\flashcard-bank.js")
+Copy-Item -LiteralPath (Join-Path $projectRoot "data\flashcard-index.js") -Destination (Join-Path $packageDirectory "data\flashcard-index.js")
 Copy-Item -LiteralPath (Join-Path $projectRoot "data\notes-bank.js") -Destination (Join-Path $packageDirectory "data\notes-bank.js")
+Copy-Item -LiteralPath (Join-Path $projectRoot "data\notes-index.js") -Destination (Join-Path $packageDirectory "data\notes-index.js")
 Copy-Item -LiteralPath $NodeExecutable -Destination (Join-Path $packageDirectory "runtime\node.exe")
 Copy-Item -LiteralPath $nodeLicense -Destination (Join-Path $packageDirectory "runtime\NODE-LICENSE.txt")
 

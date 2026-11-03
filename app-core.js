@@ -1,10 +1,16 @@
 (function initGrileApp(global) {
   "use strict";
 
-  const bank = global.GRILE_QUESTION_BANK;
-  if (!bank?.questions?.length) {
-    throw new Error("Banca de întrebări nu a fost încărcată.");
-  }
+  const fullQuestionBank = global.GRILE_QUESTION_BANK;
+  const questionIndex = global.GRILE_QUESTION_INDEX;
+  const bank = fullQuestionBank || (questionIndex
+    ? { ...questionIndex, questions: [] }
+    : {
+        version: 1,
+        metadata: { questionCount: 0, chapterCount: 0, subchapterCount: 0 },
+        chapters: [],
+        questions: []
+      });
 
   const fileStore = global.GrileFileStore;
   if (!fileStore?.ready || typeof fileStore.getState !== "function" || typeof fileStore.replace !== "function") {
@@ -14,21 +20,39 @@
   const ready = Promise.resolve(fileStore.ready);
   const OPTION_IDS = ["A", "B", "C", "D", "E"];
   const PRACTICE_QUESTION_TYPES = new Set(["all", "CS", "CM"]);
-  const flashcardBank = global.FLASHCARD_BANK || {
+  const flashcardBank = global.FLASHCARD_BANK || global.FLASHCARD_INDEX || {
     version: 1,
     metadata: { cardCount: 0, deckCount: 0, chapterCount: 0 },
     chapters: [],
     decks: [],
     cards: []
   };
-  const notesBank = global.NOTES_BANK || {
+  const notesBank = global.NOTES_BANK || global.NOTES_INDEX || {
     version: 1,
     metadata: { chapterCount: 0, subchapterCount: 0, sectionCount: 0, clozeCount: 0 },
     chapters: [],
     subchapters: [],
     sections: []
   };
-  const questionById = new Map(bank.questions.map(question => [question.id, question]));
+  const questionReferences = fullQuestionBank
+    ? fullQuestionBank.questions
+    : (questionIndex?.questions || []).map(([id, fingerprint, type, chapterId, subchapterId, shardId]) => ({
+        id,
+        fingerprint,
+        type,
+        chapterId,
+        subchapterId,
+        shardId: shardId || chapterId
+      }));
+  const questionById = new Map(questionReferences.map(question => [question.id, question]));
+  const loadedQuestionIds = new Set((fullQuestionBank?.questions || []).map(question => question.id));
+  const questionShardLoads = new Map();
+  const questionsByChapter = new Map();
+  questionReferences.forEach(question => {
+    const questions = questionsByChapter.get(question.chapterId) || [];
+    questions.push(question);
+    questionsByChapter.set(question.chapterId, questions);
+  });
   const flashcardById = new Map(flashcardBank.cards.map(card => [card.id, card]));
   const flashcardDeckById = new Map(flashcardBank.decks.map(deck => [deck.id, deck]));
   const noteSectionById = new Map(notesBank.sections.map(section => [section.id, section]));
@@ -218,12 +242,59 @@
     });
   }
 
+  function loadQuestionShard(shardId) {
+    if (loadedQuestionIds.size === questionReferences.length) return Promise.resolve();
+    if (questionShardLoads.has(shardId)) return questionShardLoads.get(shardId);
+    if (typeof document === "undefined" || !document.createElement || !global.location?.href) {
+      return Promise.reject(new Error("Întrebările nu pot fi încărcate în acest mediu."));
+    }
+
+    const load = new Promise((resolve, reject) => {
+      const script = document.createElement("script");
+      script.src = new URL(`data/question-shards/${encodeURIComponent(shardId)}.js`, global.location.href).href;
+      script.onload = () => {
+        const questions = global.GRILE_QUESTION_SHARDS?.[shardId];
+        if (!Array.isArray(questions)) {
+          questionShardLoads.delete(shardId);
+          reject(new Error(`Fișierul cu întrebări ${shardId} nu a putut fi citit.`));
+          return;
+        }
+        questions.forEach(question => {
+          questionById.set(question.id, question);
+          loadedQuestionIds.add(question.id);
+          bank.questions.push(question);
+        });
+        resolve();
+      };
+      script.onerror = () => {
+        questionShardLoads.delete(shardId);
+        reject(new Error(`Întrebările ${shardId} nu s-au putut descărca. Verifică conexiunea și încearcă din nou.`));
+      };
+      document.head.append(script);
+    });
+    questionShardLoads.set(shardId, load);
+    return load;
+  }
+
+  async function loadQuestionIds(questionIds) {
+    const requestedIds = [...new Set(questionIds)];
+    const unknownId = requestedIds.find(questionId => !questionById.has(questionId));
+    if (unknownId) throw new Error(`Întrebarea ${unknownId} nu există în indexul băncii.`);
+    const missingIds = requestedIds.filter(questionId => !loadedQuestionIds.has(questionId));
+    const shardIds = [...new Set(missingIds.map(questionId => questionById.get(questionId).shardId))];
+    await Promise.all(shardIds.map(loadQuestionShard));
+
+    const missing = missingIds.find(questionId => !loadedQuestionIds.has(questionId));
+    if (missing) throw new Error(`Întrebarea ${missing} lipsește din fișierele descărcate.`);
+    return requestedIds.map(questionId => questionById.get(questionId));
+  }
+
   function availableQuestionsForSubchapters(subchapterIds, questionType = "all") {
     if (!PRACTICE_QUESTION_TYPES.has(questionType)) {
       throw new Error("Tipul întrebărilor trebuie să fie CS, CM sau toate tipurile.");
     }
     const requested = new Set(subchapterIds);
-    return uniqueQuestions(bank.questions.filter(question => (
+    return uniqueQuestions(questionReferences.filter(question => (
       requested.has(question.subchapterId)
       && (questionType === "all" || question.type === questionType)
     )));
@@ -307,21 +378,23 @@
       throw new Error(`Lista conține doar ${available.length} întrebări greșite. Alege cel mult ${available.length}.`);
     }
 
-    return createSession("mistakes", available.slice(0, count), {
-      selectedSubchapterIds: [...new Set(available.slice(0, count).map(question => question.subchapterId))]
-    });
+    const selectedReferences = available.slice(0, count);
+    const config = {
+      selectedSubchapterIds: [...new Set(selectedReferences.map(question => question.subchapterId))]
+    };
+    return createSession("mistakes", selectedReferences, config);
   }
 
   function createExamSession() {
-    const simple = uniqueQuestions(bank.questions.filter(question => question.type === "CS"));
-    const multiple = uniqueQuestions(bank.questions.filter(question => question.type === "CM"));
+    const simple = uniqueQuestions(questionReferences.filter(question => question.type === "CS"));
+    const multiple = uniqueQuestions(questionReferences.filter(question => question.type === "CM"));
 
     if (simple.length < 50 || multiple.length < 150) {
       throw new Error("Banca nu conține suficiente întrebări CS și CM pentru simularea completă.");
     }
 
-    const questions = [...simple.slice(0, 50), ...multiple.slice(0, 150)];
-    return createSession("exam", questions);
+    const selectedReferences = [...simple.slice(0, 50), ...multiple.slice(0, 150)];
+    return createSession("exam", selectedReferences);
   }
 
   function getFlashcardState() {
@@ -870,7 +943,7 @@
     const chapters = {};
 
     bank.chapters.forEach(chapter => {
-      const chapterQuestions = bank.questions.filter(question => question.chapterId === chapter.id);
+      const chapterQuestions = questionsByChapter.get(chapter.id) || [];
       chapters[chapter.id] = metricsForQuestions(chapterQuestions, progress);
       chapter.subchapters.forEach(subchapter => {
         const questions = chapterQuestions.filter(question => question.subchapterId === subchapter.id);
@@ -1660,6 +1733,8 @@
     ready,
     bank,
     questionById,
+    questionReferenceById: questionById,
+    loadQuestionIds,
     chapterById,
     subchapterById,
     flashcardBank,

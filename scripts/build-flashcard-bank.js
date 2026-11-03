@@ -6,6 +6,7 @@ const path = require("node:path");
 const projectRoot = path.resolve(__dirname, "..");
 const sourcePath = path.resolve(process.argv[2] || path.join(projectRoot, "flashcard.json"));
 const outputPath = path.resolve(process.argv[3] || path.join(projectRoot, "data", "flashcard-bank.js"));
+const indexOutputPath = path.join(path.dirname(outputPath), "flashcard-index.js");
 const chapterTitles = new Map([
   ["1", "ODONTOTERAPIE"],
   ["2", "ENDODONȚIE"],
@@ -181,8 +182,18 @@ fs.writeFileSync(
   `(function (global) {\n  "use strict";\n  global.FLASHCARD_BANK = Object.freeze(${JSON.stringify(bank)});\n})(typeof window !== "undefined" ? window : globalThis);\n`,
   "utf8"
 );
+const index = {
+  ...bank,
+  cards: cards.map(card => ({ id: card.id, deckId: card.deckId }))
+};
+fs.writeFileSync(
+  indexOutputPath,
+  `(function (global) {\n  "use strict";\n  global.FLASHCARD_INDEX = Object.freeze(${JSON.stringify(index)});\n})(typeof window !== "undefined" ? window : globalThis);\n`,
+  "utf8"
+);
 
 console.log(
   `Au fost importate ${cards.length} flashcarduri din ${quizzes.length} surse, în ${decks.length} seturi și ${chapters.length} capitole.`
 );
 console.log(outputPath);
+console.log(indexOutputPath);

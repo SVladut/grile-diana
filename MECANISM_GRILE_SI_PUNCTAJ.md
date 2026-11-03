@@ -539,7 +539,9 @@ Pentru a confirma că noul site reproduce exact comportamentul, cazurile CM de m
 
 ## 12. Fișierele relevante din proiectul actual
 
-- `data/question-bank.js` — banca de întrebări și structura capitolelor;
+- `data/question-bank.js` — banca completă sursă, folosită la generare;
+- `data/question-index.js` și `data/question-shards/` — catalogul compact și fragmentele încărcate la generarea unei sesiuni;
+- `data/flashcard-index.js` și `data/notes-index.js` — metadatele compacte folosite de profil pentru statistici fără încărcarea conținutului integral;
 - `selectare.js` — catalogul, filtrele și pornirea celor trei tipuri de sesiune;
 - `app-core.js` — generarea, normalizarea, punctarea, progresul, greșelile, sesiunile și istoricul;
 - `quiz.js` — interfața întrebării, feedbackul, amânarea, cronometrul și rezultatul;

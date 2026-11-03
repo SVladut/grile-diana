@@ -2,9 +2,20 @@
   "use strict";
 
   const PAGE_SIZE = 25;
-  const bank = global.GRILE_QUESTION_BANK || { version: null, chapters: [], questions: [] };
+  const bank = global.GRILE_QUESTION_BANK || global.GRILE_QUESTION_INDEX || { version: null, chapters: [], questions: [] };
   const chapters = Array.isArray(bank.chapters) ? bank.chapters : [];
-  const questions = Array.isArray(bank.questions) ? bank.questions : [];
+  const questions = Array.isArray(bank.questions)
+    ? bank.questions.map(question => Array.isArray(question)
+      ? {
+          id: question[0],
+          fingerprint: question[1],
+          type: question[2],
+          chapterId: question[3],
+          subchapterId: question[4]
+        }
+      : question)
+    : [];
+  const questionCount = Number.isInteger(bank.metadata?.questionCount) ? bank.metadata.questionCount : questions.length;
   const questionById = new Map(questions.map(question => [String(question.id), question]));
   const chapterById = new Map();
   const subchapterById = new Map();
@@ -118,6 +129,7 @@
   let questionRows = [];
   let activeHistoryReview = null;
   let activeHistoryQuestionIndex = 0;
+  let questionDetailsLoadPromise = null;
 
   function finiteNumber(value, fallback = 0) {
     const number = Number(value);
@@ -210,7 +222,7 @@
       const chapterCode = chapter?.code ? `Cap. ${chapter.code}` : "—";
       const subchapterTitle = subchapter?.title || "Subcapitol indisponibil";
       const subchapterId = String(question?.subchapterId || "—");
-      const questionText = String(question?.text || "Întrebarea nu mai există în banca actuală.");
+      const questionText = String(question?.text || `Întrebarea ${questionId}`);
       const type = question?.type === "CS" || question?.type === "CM" ? question.type : "—";
       const lastScore = Number(rawRecord.lastScore);
       const lastMaxScore = Number(rawRecord.lastMaxScore);
@@ -251,7 +263,7 @@
 
   function buildOverview() {
     const attemptedInBank = questionRows.filter(row => row.existsInBank).length;
-    const totalQuestions = questions.length;
+    const totalQuestions = questionCount;
     const correct = questionRows.filter(row => row.status === "correct").length;
     const wrong = questionRows.filter(row => row.status === "wrong").length;
     const totalAttempts = questionRows.reduce((sum, row) => sum + row.attempts, 0);
@@ -473,7 +485,7 @@
       elements.historyTableBody.append(row);
 
       detailsButton.addEventListener("click", () => {
-        openHistoryReview(entry);
+        void openHistoryReview(entry);
       });
     });
 
@@ -493,10 +505,21 @@
     return "wrong";
   }
 
-  function openHistoryReview(entry) {
+  async function openHistoryReview(entry) {
     const questionHistory = Array.isArray(entry.questions) ? entry.questions : [];
     if (!questionHistory.length) {
       showActionMessage("Acest test nu are întrebările salvate în istoricul original.", true);
+      return;
+    }
+
+    const questionsToLoad = questionHistory
+      .filter(detail => !detail.text || !Array.isArray(detail.options) || !Array.isArray(detail.correct))
+      .map(detail => String(detail.questionId))
+      .filter(questionId => questionById.has(questionId));
+    try {
+      await app.loadQuestionIds(questionsToLoad);
+    } catch (error) {
+      showActionMessage(`Întrebările istoricului nu au putut fi încărcate: ${error.message}`, true);
       return;
     }
 
@@ -889,6 +912,29 @@
     questionRows = buildQuestionRows();
   }
 
+  function loadProgressQuestionDetails() {
+    if (questionDetailsLoadPromise) return questionDetailsLoadPromise;
+    const questionIds = Object.keys(progressQuestions)
+      .filter(questionId => {
+        const question = questionById.get(String(questionId));
+        return question && !question.text;
+      });
+    if (!questionIds.length) return Promise.resolve();
+
+    questionDetailsLoadPromise = (async () => {
+      try {
+        await app.loadQuestionIds(questionIds);
+        questionRows = buildQuestionRows();
+        renderQuestions();
+      } catch (error) {
+        showActionMessage(`Detaliile întrebărilor nu au putut fi încărcate: ${error.message}`, true);
+      } finally {
+        questionDetailsLoadPromise = null;
+      }
+    })();
+    return questionDetailsLoadPromise;
+  }
+
   function renderAllData() {
     currentPage = 1;
     buildOverview();
@@ -952,6 +998,9 @@
       currentPage = 1;
       renderQuestions();
     });
+    elements.questionSearch.addEventListener("focus", () => {
+      void loadProgressQuestionDetails();
+    });
     elements.statusFilter.addEventListener("change", () => {
       currentPage = 1;
       renderQuestions();
@@ -985,6 +1034,16 @@
       renderQuestions();
       document.getElementById("questions-title")?.scrollIntoView({ behavior: "smooth", block: "start" });
     });
+
+    const questionSectionHeading = document.getElementById("questions-title");
+    if (questionSectionHeading && "IntersectionObserver" in global) {
+      const observer = new global.IntersectionObserver(entries => {
+        if (!entries.some(entry => entry.isIntersecting)) return;
+        observer.disconnect();
+        void loadProgressQuestionDetails();
+      });
+      observer.observe(questionSectionHeading);
+    }
   }
 
   async function init() {
@@ -1002,7 +1061,7 @@
       elements.resetProgressBtn.disabled = true;
     }
 
-    if (!questions.length) {
+    if (!questionCount) {
       elements.dataWarning.textContent = "Banca de întrebări nu a putut fi încărcată. Istoricul este afișat, dar denumirile întrebărilor pot lipsi.";
       elements.dataWarning.hidden = false;
     }

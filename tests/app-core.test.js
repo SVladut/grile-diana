@@ -8,7 +8,7 @@ const vm = require("node:vm");
 
 const source = fs.readFileSync(path.join(__dirname, "..", "app-core.js"), "utf8");
 
-function createApp(initialState = null) {
+function createApp(initialState = null, additionalBanks = {}) {
   let state = initialState || {
     version: 1,
     revision: 0,
@@ -41,6 +41,7 @@ function createApp(initialState = null) {
       sections: [{ id: "section-1" }],
       subchapters: [{ id: "notes-subchapter-1" }]
     },
+    ...additionalBanks,
     GrileFileStore: {
       ready: Promise.resolve(),
       getState: () => state,
@@ -87,6 +88,87 @@ test("custom test rejects an unsupported question type", () => {
   const { app } = createApp();
 
   assert.throws(() => app.createPracticeSession(["1.01"], 1, "invalid"), /Tipul întrebărilor/);
+});
+
+test("indexed question bank loads a shard only when session questions are requested", async () => {
+  const questions = [
+    { id: "cs-1", fingerprint: "cs-1", chapterId: "chapter-1", subchapterId: "1.01", type: "CS", text: "Test CS", options: [{ id: "A", text: "Răspuns A" }], correct: ["A"] },
+    { id: "cm-1", fingerprint: "cm-1", chapterId: "chapter-1", subchapterId: "1.01", type: "CM", text: "Test CM", options: [{ id: "A", text: "Răspuns A" }], correct: ["A"] }
+  ];
+  let state = {
+    version: 1,
+    revision: 0,
+    progress: { version: 1, updatedAt: null, questions: {} },
+    mistakes: { version: 1, updatedAt: null, questions: {} },
+    flashcards: { version: 1, updatedAt: null, ratings: {}, session: null },
+    notes: { version: 1, updatedAt: null, testRuns: 0, sections: {}, subchapters: {} },
+    history: [],
+    session: null
+  };
+  const window = {
+    GRILE_QUESTION_INDEX: {
+      metadata: { questionCount: questions.length },
+      chapters: [{ id: "chapter-1", code: "1", title: "Test", subchapters: [{ id: "1.01", title: "Test" }] }],
+      questions: questions.map(question => [
+        question.id,
+        question.fingerprint,
+        question.type,
+        question.chapterId,
+        question.subchapterId,
+        "shard-0"
+      ])
+    },
+    location: { href: "https://example.test/selectare.html" },
+    document: {
+      createElement: () => ({}),
+      head: {
+        append: script => {
+          window.GRILE_QUESTION_SHARDS = { "shard-0": questions };
+          script.onload();
+        }
+      }
+    },
+    NOTES_BANK: { version: 1, metadata: {}, chapters: [], sections: [], subchapters: [] },
+    GrileFileStore: {
+      ready: Promise.resolve(),
+      getState: () => state,
+      replace: async nextState => {
+        state = JSON.parse(JSON.stringify(nextState));
+        return state;
+      }
+    }
+  };
+  vm.runInNewContext(source, { window, URL, document: window.document, location: window.location });
+  const app = window.GrileApp;
+
+  assert.equal(app.bank.questions.length, 0);
+  const session = app.createPracticeSession(["1.01"], 1, "CS");
+  assert.equal(session.questionIds.length, 1);
+  assert.equal(app.bank.questions.length, 0);
+  await app.loadQuestionIds(session.questionIds);
+  assert.equal(app.questionById.get(session.questionIds[0]).text, "Test CS");
+  assert.equal(app.bank.questions.length, 2);
+});
+
+test("profile metrics work with lightweight flashcard and notes indexes", () => {
+  const { app } = createApp(null, {
+    FLASHCARD_INDEX: {
+      metadata: { cardCount: 2 },
+      chapters: [],
+      decks: [{ id: "deck-1" }],
+      cards: [{ id: "card-1", deckId: "deck-1" }, { id: "card-2", deckId: "deck-1" }]
+    },
+    NOTES_INDEX: {
+      metadata: { sectionCount: 1, subchapterCount: 1 },
+      chapters: [],
+      subchapters: [{ id: "subchapter-1", sectionIds: ["section-1"] }],
+      sections: [{ id: "section-1", subchapterId: "subchapter-1" }]
+    }
+  });
+
+  assert.equal(app.flashcardMetrics().total, 2);
+  assert.equal(app.notesMetrics().total, 1);
+  assert.equal(app.notesMetrics().totalSubchapters, 1);
 });
 
 function createBackup({ progressQuestions = {}, history = [] } = {}) {

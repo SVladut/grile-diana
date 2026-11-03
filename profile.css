@@ -1031,8 +1031,8 @@ select:focus-visible {
 }
 
 .history-review-dialog {
-  width: min(1200px, calc(100vw - 48px));
-  height: min(820px, calc(100dvh - 48px));
+  width: min(1800px, calc(100vw - 32px));
+  height: min(1000px, calc(100dvh - 32px));
   max-width: none;
   max-height: none;
   padding: 0;
@@ -1751,7 +1751,7 @@ select:focus-visible {
   }
 
   .history-review-layout {
-    grid-template-columns: minmax(0, 2fr) minmax(190px, 1fr);
+    grid-template-columns: minmax(0, 3fr) minmax(190px, 1fr);
   }
 
   .history-review-content {

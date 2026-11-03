@@ -10,6 +10,8 @@ const SUBJECTS_JSON_PATH = path.join(ROOT, "data", "subiecte-2021-2025.json");
 const HISTORICAL_JSON_PATH = path.join(ROOT, "data", "grile-anterioare.json");
 const SET2_JSON_PATH = path.join(ROOT, "data", "set-2-grile.json");
 const OUTPUT_PATH = path.join(ROOT, "data", "question-bank.js");
+const INDEX_OUTPUT_PATH = path.join(ROOT, "data", "question-index.js");
+const SHARDS_OUTPUT_PATH = path.join(ROOT, "data", "question-shards");
 const SUBJECTS_CHAPTER_ID = "subiecte-2021-2025";
 const SUBJECTS_CHAPTER_TITLE = "Subiecte 2021-2025 pe capitole";
 const HISTORICAL_CHAPTER_ID = "grile-anterioare";
@@ -739,9 +741,52 @@ function buildBank() {
   };
 
   fs.writeFileSync(OUTPUT_PATH, `window.GRILE_QUESTION_BANK=${JSON.stringify(bank)};\n`, "utf8");
+  const index = {
+    version: bank.version,
+    metadata: bank.metadata,
+    chapters: bank.chapters,
+    questions: []
+  };
+  fs.mkdirSync(SHARDS_OUTPUT_PATH, { recursive: true });
+  fs.readdirSync(SHARDS_OUTPUT_PATH).forEach(fileName => {
+    const filePath = path.join(SHARDS_OUTPUT_PATH, fileName);
+    if (fileName.endsWith(".js") && fs.statSync(filePath).isFile()) fs.unlinkSync(filePath);
+  });
+  const shardIds = new Map();
+  const questionsByShard = new Map();
+  bankQuestions.forEach(question => {
+    const key = JSON.stringify([question.chapterId, question.subchapterId]);
+    if (!shardIds.has(key)) {
+      const shardId = `shard-${shardIds.size}`;
+      shardIds.set(key, shardId);
+      questionsByShard.set(shardId, []);
+    }
+    const shardId = shardIds.get(key);
+    questionsByShard.get(shardId).push(question);
+    index.questions.push([
+      question.id,
+      question.fingerprint,
+      question.type,
+      question.chapterId,
+      question.subchapterId,
+      shardId
+    ]);
+  });
+  fs.writeFileSync(INDEX_OUTPUT_PATH, `window.GRILE_QUESTION_INDEX=${JSON.stringify(index)};\n`, "utf8");
+
+  questionsByShard.forEach((shardQuestions, shardId) => {
+    const shard = `window.GRILE_QUESTION_SHARDS=window.GRILE_QUESTION_SHARDS||{};window.GRILE_QUESTION_SHARDS[${JSON.stringify(shardId)}]=${JSON.stringify(shardQuestions)};\n`;
+    fs.writeFileSync(path.join(SHARDS_OUTPUT_PATH, `${shardId}.js`), shard, "utf8");
+  });
 
   console.log(JSON.stringify({
     output: path.relative(ROOT, OUTPUT_PATH),
+    indexOutput: path.relative(ROOT, INDEX_OUTPUT_PATH),
+    indexBytes: fs.statSync(INDEX_OUTPUT_PATH).size,
+    shardCount: questionsByShard.size,
+    shardBytes: [...questionsByShard.keys()].reduce((sum, shardId) => (
+      sum + fs.statSync(path.join(SHARDS_OUTPUT_PATH, `${shardId}.js`)).size
+    ), 0),
     bytes: fs.statSync(OUTPUT_PATH).size,
     ...bank.metadata,
     duplicateCanonicalGroups: duplicateGroups.length,

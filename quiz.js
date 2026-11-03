@@ -497,6 +497,13 @@ document.addEventListener("DOMContentLoaded", async () => {
     return;
   }
 
+  try {
+    await app.loadQuestionIds(session.questionIds);
+  } catch (error) {
+    showError(error.message);
+    return;
+  }
+
   if (session.status === "completed") {
     renderResult();
     return;

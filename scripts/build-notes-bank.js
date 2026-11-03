@@ -7,6 +7,7 @@ const ROOT = path.resolve(__dirname, "..");
 const SOURCE_PATH = path.join(ROOT, "data", "notite.json");
 const QUESTION_BANK_PATH = path.join(ROOT, "data", "question-bank.js");
 const OUTPUT_PATH = path.join(ROOT, "data", "notes-bank.js");
+const INDEX_OUTPUT_PATH = path.join(ROOT, "data", "notes-index.js");
 const MAX_ALTERNATIVES_PER_LINE = 3;
 const ROMANIAN_STOP_WORDS = new Set([
   "aceasta", "aceste", "acestea", "acestui", "acestor", "acești", "acelea", "acela", "altor",
@@ -393,8 +394,15 @@ function build() {
   };
 
   fs.writeFileSync(OUTPUT_PATH, `window.NOTES_BANK=${JSON.stringify(bank)};\n`, "utf8");
+  const index = {
+    ...bank,
+    sections: sections.map(section => ({ id: section.id, subchapterId: section.subchapterId }))
+  };
+  fs.writeFileSync(INDEX_OUTPUT_PATH, `window.NOTES_INDEX=${JSON.stringify(index)};\n`, "utf8");
   console.log(JSON.stringify({
     output: path.relative(ROOT, OUTPUT_PATH),
+    indexOutput: path.relative(ROOT, INDEX_OUTPUT_PATH),
+    indexBytes: fs.statSync(INDEX_OUTPUT_PATH).size,
     bytes: fs.statSync(OUTPUT_PATH).size,
     ...bank.metadata,
     chapterSections: chapters.map(chapter => ({ code: chapter.code, subchapters: chapter.subchapterCount, sections: chapter.sectionCount })),

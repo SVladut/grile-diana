@@ -443,7 +443,7 @@ document.addEventListener("DOMContentLoaded", async () => {
     if (!confirmSessionReplacement()) return;
 
     try {
-      const session = app.createPracticeSession(
+      const session = await app.createPracticeSession(
         selectedSubchapterIds(),
         Number(numberInput.value),
         questionTypeFilter.value
@@ -460,7 +460,7 @@ document.addEventListener("DOMContentLoaded", async () => {
     if (!confirmSessionReplacement()) return;
 
     try {
-      const session = app.createMistakeSession(Number(mistakeTestCount.value));
+      const session = await app.createMistakeSession(Number(mistakeTestCount.value));
       await startSession(session);
     } catch (error) {
       showMistakesMessage(error.message);
@@ -472,7 +472,7 @@ document.addEventListener("DOMContentLoaded", async () => {
     if (!confirmSessionReplacement()) return;
 
     try {
-      await startSession(app.createExamSession());
+      await startSession(await app.createExamSession());
     } catch (error) {
       window.alert(error.message);
     }
