@@ -95,6 +95,7 @@ test("indexed question bank loads a shard only when session questions are reques
     { id: "cs-1", fingerprint: "cs-1", chapterId: "chapter-1", subchapterId: "1.01", type: "CS", text: "Test CS", options: [{ id: "A", text: "Răspuns A" }], correct: ["A"] },
     { id: "cm-1", fingerprint: "cm-1", chapterId: "chapter-1", subchapterId: "1.01", type: "CM", text: "Test CM", options: [{ id: "A", text: "Răspuns A" }], correct: ["A"] }
   ];
+  const shardUrls = [];
   let state = {
     version: 1,
     revision: 0,
@@ -123,6 +124,7 @@ test("indexed question bank loads a shard only when session questions are reques
       createElement: () => ({}),
       head: {
         append: script => {
+          shardUrls.push(script.src);
           window.GRILE_QUESTION_SHARDS = { "shard-0": questions };
           script.onload();
         }
@@ -148,6 +150,7 @@ test("indexed question bank loads a shard only when session questions are reques
   await app.loadQuestionIds(session.questionIds);
   assert.equal(app.questionById.get(session.questionIds[0]).text, "Test CS");
   assert.equal(app.bank.questions.length, 2);
+  assert.match(shardUrls[0], /shard-0\.js\?v=3$/);
 });
 
 test("profile metrics work with lightweight flashcard and notes indexes", () => {

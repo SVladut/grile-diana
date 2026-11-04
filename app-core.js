@@ -251,7 +251,7 @@
 
     const load = new Promise((resolve, reject) => {
       const script = document.createElement("script");
-      script.src = new URL(`data/question-shards/${encodeURIComponent(shardId)}.js`, global.location.href).href;
+      script.src = new URL(`data/question-shards/${encodeURIComponent(shardId)}.js?v=3`, global.location.href).href;
       script.onload = () => {
         const questions = global.GRILE_QUESTION_SHARDS?.[shardId];
         if (!Array.isArray(questions)) {
