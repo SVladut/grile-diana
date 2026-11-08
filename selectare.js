@@ -192,6 +192,7 @@ document.addEventListener("DOMContentLoaded", async () => {
   const selectedSummary = document.getElementById("selectedSummary");
   const numberInput = document.getElementById("numarIntrebari");
   const questionTypeFilter = document.getElementById("questionTypeFilter");
+  const questionProgressFilter = document.getElementById("questionProgressFilter");
   const questionCountHint = document.getElementById("questionCountHint");
   const formMessage = document.getElementById("formMessage");
   const resumeBanner = document.getElementById("resumeBanner");
@@ -305,24 +306,34 @@ document.addEventListener("DOMContentLoaded", async () => {
 
   function uniqueAvailableCount(subchapterIds) {
     if (!subchapterIds.length) return 0;
-    return app.availableQuestionsForSubchapters(subchapterIds, questionTypeFilter.value).length;
+    return app.availableQuestionsForSubchapters(
+      subchapterIds,
+      questionTypeFilter.value,
+      questionProgressFilter.value
+    ).length;
   }
 
   function updateSelectionState() {
     const selectedIds = selectedSubchapterIds();
     const available = uniqueAvailableCount(selectedIds);
     const typeLabel = questionTypeFilter.selectedOptions[0].textContent.toLowerCase();
+    const progressLabel = questionProgressFilter.value === "unanswered";
     selectedCount.textContent = String(selectedIds.length);
-    selectedSummary.textContent = selectedIds.length
-      ? `${available.toLocaleString("ro-RO")} grile unice ${available === 1 ? "disponibilă" : "disponibile"}`
-      : "subcapitole selectate";
+    if (selectedIds.length) {
+      const countNoun = available === 1 ? "grilă unică" : "grile unice";
+      const progressNoun = progressLabel ? (available === 1 ? " neparcursă" : " neparcurse") : "";
+      const availability = available === 1 ? "disponibilă" : "disponibile";
+      selectedSummary.textContent = `${available.toLocaleString("ro-RO")} ${countNoun}${progressNoun} ${availability}`;
+    } else {
+      selectedSummary.textContent = "subcapitole selectate";
+    }
 
     const effectiveMax = Math.max(1, available);
     numberInput.max = String(effectiveMax);
     questionCountHint.textContent = selectedIds.length
       ? available
-        ? `Poți genera între 1 și ${available.toLocaleString("ro-RO")} întrebări ${typeLabel}.`
-        : `Nu există întrebări ${typeLabel} în subcapitolele selectate.`
+        ? `Poți genera între 1 și ${available.toLocaleString("ro-RO")} întrebări ${typeLabel}${progressLabel ? " din grilele neparcurse" : ""}.`
+        : `Nu există ${progressLabel ? "grile neparcurse" : "grile disponibile"}${questionTypeFilter.value === "all" ? "" : ` de tip ${questionTypeFilter.value}`} în subcapitolele selectate.`
       : "Selectează subcapitolele pentru a vedea numărul maxim de întrebări.";
     if (available && Number(numberInput.value) > effectiveMax) {
       numberInput.value = String(effectiveMax);
@@ -390,6 +401,7 @@ document.addEventListener("DOMContentLoaded", async () => {
 
   chapterCheckboxes.forEach(checkbox => checkbox.addEventListener("change", updateSelectionState));
   questionTypeFilter.addEventListener("change", updateSelectionState);
+  questionProgressFilter.addEventListener("change", updateSelectionState);
 
   document.querySelectorAll(".toggle-subcapitole, .toggle-collection").forEach(button => {
     const targetId = button.dataset.target;
@@ -446,7 +458,8 @@ document.addEventListener("DOMContentLoaded", async () => {
       const session = await app.createPracticeSession(
         selectedSubchapterIds(),
         Number(numberInput.value),
-        questionTypeFilter.value
+        questionTypeFilter.value,
+        questionProgressFilter.value
       );
       await startSession(session);
     } catch (error) {

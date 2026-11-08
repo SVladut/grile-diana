@@ -9,7 +9,7 @@
   <link rel="preconnect" href="https://fonts.googleapis.com" />
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
   <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@400;500;600;700;800&display=swap" rel="stylesheet" />
-  <link rel="stylesheet" href="selectare.css" />
+  <link rel="stylesheet" href="selectare.css?v=4" />
   <link rel="stylesheet" href="mobile.css" />
   <link rel="stylesheet" href="site-header.css?v=5" />
 </head>
@@ -464,6 +464,13 @@
             </select>
           </div>
           <div class="input-group">
+            <label for="questionProgressFilter">Grile incluse</label>
+            <select id="questionProgressFilter">
+              <option value="all">Toate grilele</option>
+              <option value="unanswered">Doar neparcurse</option>
+            </select>
+          </div>
+          <div class="input-group">
             <input type="number" id="numarIntrebari" required min="1" max="1" placeholder=" " inputmode="numeric" />
             <label for="numarIntrebari">Număr întrebări</label>
           </div>
@@ -523,7 +530,7 @@
 
   <script src="data/question-index.js?v=3"></script>
   <script src="file-store.js"></script>
-  <script src="app-core.js?v=3"></script>
-  <script src="selectare.js?v=3"></script>
+  <script src="app-core.js?v=4"></script>
+  <script src="selectare.js?v=4"></script>
 </body>
 </html>

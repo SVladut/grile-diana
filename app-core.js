@@ -289,14 +289,19 @@
     return requestedIds.map(questionId => questionById.get(questionId));
   }
 
-  function availableQuestionsForSubchapters(subchapterIds, questionType = "all") {
+  function availableQuestionsForSubchapters(subchapterIds, questionType = "all", progressFilter = "all") {
     if (!PRACTICE_QUESTION_TYPES.has(questionType)) {
       throw new Error("Tipul întrebărilor trebuie să fie CS, CM sau toate tipurile.");
     }
+    if (progressFilter !== "all" && progressFilter !== "unanswered") {
+      throw new Error("Filtrul grilelor trebuie să fie toate sau neparcurse.");
+    }
     const requested = new Set(subchapterIds);
+    const progress = progressFilter === "unanswered" ? getProgress().questions : null;
     return uniqueQuestions(questionReferences.filter(question => (
       requested.has(question.subchapterId)
       && (questionType === "all" || question.type === questionType)
+      && (!progress || !progress[question.id])
     )));
   }
 
@@ -334,11 +339,11 @@
     };
   }
 
-  function createPracticeSession(subchapterIds, requestedCount, questionType = "all") {
+  function createPracticeSession(subchapterIds, requestedCount, questionType = "all", progressFilter = "all") {
     const selected = [...new Set(subchapterIds)].filter(id => subchapterById.has(id));
     if (!selected.length) throw new Error("Selectează cel puțin un subcapitol.");
 
-    const available = availableQuestionsForSubchapters(selected, questionType);
+    const available = availableQuestionsForSubchapters(selected, questionType, progressFilter);
     const count = Number(requestedCount);
     if (!Number.isInteger(count) || count < 1) {
       throw new Error("Numărul de întrebări trebuie să fie un număr întreg pozitiv.");

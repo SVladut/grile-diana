@@ -73,6 +73,27 @@ test("custom test can select only multiple-answer questions", () => {
   assert.equal(app.availableQuestionsForSubchapters(["1.01"], "CM").length, 2);
 });
 
+test("custom test can include only unanswered questions from selected subchapters", () => {
+  const { app } = createApp();
+  app.getProgress().questions["cs-1"] = { status: "correct", attempts: 1 };
+  app.getProgress().questions["cm-1"] = { status: "wrong", attempts: 1 };
+
+  const available = app.availableQuestionsForSubchapters(["1.01"], "all", "unanswered");
+  const session = app.createPracticeSession(["1.01"], 2, "all", "unanswered");
+
+  assert.deepEqual(new Set(available.map(question => question.id)), new Set(["cs-2", "cm-2"]));
+  assert.deepEqual(new Set(session.questionIds), new Set(["cs-2", "cm-2"]));
+});
+
+test("custom test rejects an unsupported progress filter", () => {
+  const { app } = createApp();
+
+  assert.throws(
+    () => app.createPracticeSession(["1.01"], 1, "all", "invalid"),
+    /Filtrul grilelor/
+  );
+});
+
 test("custom test keeps the previous mixed-question behavior by default", () => {
   const { app } = createApp();
   const session = app.createPracticeSession(["1.01"], 4);

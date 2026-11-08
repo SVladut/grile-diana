@@ -987,7 +987,7 @@ label {
 
 .test-actions {
   display: grid;
-  grid-template-columns: minmax(240px, 1fr) minmax(170px, 210px) 140px auto;
+  grid-template-columns: minmax(240px, 1fr) minmax(160px, 200px) minmax(160px, 200px) 140px auto;
   align-items: center;
   gap: 18px;
   margin-top: 18px;
