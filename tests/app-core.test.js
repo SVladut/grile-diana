@@ -285,6 +285,69 @@ test("completed test history snapshots the question and its answer options", asy
   assert.equal(exportedBackup.history[0].questions[0].text, savedQuestion.text);
 });
 
+async function reloadCompletedTest({ keepHistory = true, withIndex = true } = {}) {
+  const original = createApp();
+  const session = original.app.createPracticeSession(["1.01"], 1, "CS");
+  await original.app.submitCurrentAnswer(session, ["A"]);
+  const state = JSON.parse(JSON.stringify(original.getState()));
+  if (!keepHistory) state.history = [];
+  const bank = original.app.bank;
+  return {
+    ...createApp(state, {
+      GRILE_QUESTION_BANK: undefined,
+      GRILE_QUESTION_INDEX: withIndex ? {
+        chapters: bank.chapters,
+        questions: bank.questions.map(question => [
+          question.id, question.fingerprint, question.type,
+          question.chapterId, question.subchapterId, "shard-0"
+        ])
+      } : undefined
+    }),
+    savedHistory: original.getState().history
+  };
+}
+
+test("reopened profile uses saved history without loading question options", async () => {
+  const { app, savedHistory } = await reloadCompletedTest();
+
+  assert.equal(app.bank.questions.length, 0);
+  assert.deepEqual(app.getHistory(), savedHistory);
+  const backup = JSON.parse(app.buildProfileBackup().contents);
+  assert.deepEqual(backup.history, savedHistory);
+});
+
+test("starting another test after a reload preserves the completed question snapshots", async () => {
+  const { app, getState, savedHistory } = await reloadCompletedTest();
+  const nextSession = app.createPracticeSession(["1.01"], 1, "CM");
+
+  await app.saveSession(nextSession);
+
+  assert.equal(getState().session.id, nextSession.id);
+  assert.deepEqual(getState().history, savedHistory);
+});
+
+test("legacy completed session recovers review references from an unloaded index", async () => {
+  const { app, getState, savedHistory } = await reloadCompletedTest({ keepHistory: false });
+  const recovered = app.getHistory()[0];
+  const originalQuestion = savedHistory[0].questions[0];
+
+  assert.equal(recovered.score, savedHistory[0].score);
+  assert.equal(recovered.questions[0].questionId, originalQuestion.questionId);
+  assert.deepEqual([...recovered.questions[0].selection], originalQuestion.selection);
+  assert.equal(recovered.questions[0].options, undefined);
+  assert.equal(recovered.questions[0].correct, undefined);
+  await app.saveSession(app.createPracticeSession(["1.01"], 1, "CM"));
+  assert.deepEqual(getState().history[0].questions[0].selection, originalQuestion.selection);
+});
+
+test("history recovery also works on pages without a question bank", async () => {
+  const { app, savedHistory } = await reloadCompletedTest({ keepHistory: false, withIndex: false });
+  const recovered = app.getHistory()[0];
+
+  assert.equal(recovered.questions[0].questionId, savedHistory[0].questions[0].questionId);
+  assert.equal(recovered.percentage, savedHistory[0].percentage);
+});
+
 test("backup merge retains flashcard and notes progress without adding overlapping counters", async () => {
   const currentState = {
     version: 1,

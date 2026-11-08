@@ -963,7 +963,8 @@
     await ready;
     const state = readState();
     const previousSession = state.session;
-    if (previousSession?.id !== session.id && previousSession?.status === "completed" && previousSession.result) {
+    if (previousSession?.id !== session.id && previousSession?.status === "completed" && previousSession.result
+      && !state.history.some(entry => entry?.id === previousSession.id)) {
       state.history = upsertHistoryEntry(state.history, buildHistoryEntry(previousSession));
     }
     const previousUpdatedAt = session.updatedAt;
@@ -1132,14 +1133,15 @@
       const question = questionById.get(detail.questionId);
       return {
         position: index + 1,
-        questionId: question.id,
-        fingerprint: question.fingerprint,
-        type: question.type,
-        text: question.text,
-        options: question.options.map(option => ({ ...option })),
-        chapterId: question.chapterId,
-        subchapterId: question.subchapterId,
-        correct: [...question.correct],
+        questionId: detail.questionId,
+        fingerprint: question?.fingerprint,
+        type: question?.type,
+        text: question?.text,
+        // Leave unloaded content absent so the profile can fetch it when opening the review.
+        options: question?.options?.map(option => ({ ...option })),
+        chapterId: question?.chapterId,
+        subchapterId: question?.subchapterId,
+        correct: question?.correct ? [...question.correct] : undefined,
         selection: [...detail.selection],
         answered: detail.answered,
         fullyCorrect: detail.fullyCorrect,
@@ -1177,8 +1179,9 @@
     const state = readState();
     const history = state.history;
     const storedSession = state.session;
+    if (history.some(item => item?.id === storedSession?.id)) return history;
     const entry = buildHistoryEntry(storedSession);
-    if (!entry || history.some(item => item?.id === entry.id)) return history;
+    if (!entry) return history;
     return upsertHistoryEntry(history, entry);
   }
 
